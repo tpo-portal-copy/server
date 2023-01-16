@@ -1,3 +1,3 @@
 # college-placement-portal-backend
 
-Repository for college placement portal backend development project 
+Repository for backend development of college placement portal project
