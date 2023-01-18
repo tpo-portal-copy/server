@@ -12,4 +12,4 @@ class Specialization(models.Model):
     course = models.ForeignKey(Course,on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.branch_name
+        return self.branch_name + " " + self.course.name
