@@ -1,1 +1,26 @@
-api/student/{rollno}
+Student App:
+    GET - api/students  # remember to add query parameters
+    GET - api/student/{rollno}
+    POST - api/create-student
+    DELETE - api/remove-student/{rollno}
+    PUT - api/update-student/{rollno}
+
+Experience App:
+    GET - api/experiences
+    GET - api/experience/{exp_id}
+    POST - api/create-experience
+    DELETE - api/delete-experience/{exp_id}
+    PUT - api/edit-experience/{exp_id}
+
+Drive App:
+    GET - api/drives
+    GET - api/drive/{drive_id}
+    POST - api/create-drive
+    DELETE - api/delete-drive/{drive_id}
+    PUT - api/update-drive/{drive_id}
+
+Company App:
+    GET - api/companies
+    GET - api/company/{company_id}
+    DELETE - api/delete-company/{company_id}
+
