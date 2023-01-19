@@ -1,3 +1,4 @@
 .idea
 myenv
 temp
+__pycache__/
