@@ -8,8 +8,8 @@ diff_choices = [
     ('H' , 'Hard')
 ]
 jtype = [
- ('intern','Internship'),
- ('placement','Placement'),
+    ('intern','Internship'),
+    ('placement','Placement'),
 ]
 class Experience(models.Model):
     company = models.ForeignKey(Company,on_delete=models.CASCADE)
