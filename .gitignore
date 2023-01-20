@@ -1,3 +1,6 @@
 .idea
 myenv
 temp
+__pycache__/
+migrations/
+!__init__.py
