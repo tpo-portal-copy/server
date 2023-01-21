@@ -2,6 +2,7 @@ from django.db import models
 from course.models import Course,Specialization
 from company.models import Company
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 # Create your models here.
 
 from drive.models import Drive
@@ -40,15 +41,11 @@ class Cluster(models.Model):
     def __str__(self) -> str:
         return str(self.Cluster_id) 
 
+# to be filled manually and denotes category like OBC, Gen, Gen-EWS , etc..
 class Category(models.Model):
     name = models.CharField(primary_key=True,max_length=100)
     def __str__(self) -> str:
         return self.name
-
-jtype = [
-    ('intern','Internship'),
-    ('placement','Placement'),
-]
 
 gender_types = [
     ('m','Male'),
@@ -64,19 +61,17 @@ class Student(models.Model):
     personal_email = models.EmailField(null=False)
     gender = models.CharField(default="m", choices = gender_types, max_length=1)
     branch = models.ForeignKey(Specialization,on_delete=models.CASCADE)
-    pnumber = models.BigIntegerField()
+    pnumber = models.BigIntegerField(validators=[RegexValidator(regex=r'\d{10}$')])
     city = models.ForeignKey(City,on_delete=models.CASCADE)
     pincode = models.BigIntegerField()
     dob = models.DateField(null=True)
-    batch_year = models.IntegerField()
-    sitting_for = models.CharField(default = "placement" ,choices=jtype,max_length=100)
-    # cluster_1 = models.ForeignKey(Cluster,on_delete=models.CASCADE,related_name = "cluster_1")
-    # cluster_2 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_2")
-    # cluster_3 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_3")
+    batch_year = models.IntegerField() # for starting year at clg
+    current_year = models.IntegerField()  # choices to be extracted from CourseYearAllowed table at frontend
+    # sitting_for = models.CharField(default = "placement" ,choices=jtype,max_length=100)
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
-    resume = models.CharField(default="",max_length=200)
-    undertaking = models.BooleanField()
-    cgpi = models.FloatField(default=0)
+    # resume = models.CharField(default="",max_length=200)
+    # undertaking = models.BooleanField()
+    cgpi = models.DecimalField(max_digits=4, decimal_places = 2, default=0)
     gate_score = models.IntegerField(blank=True, null= True)
     cat_score = models.FloatField(blank=True, null = True)
     class_10_year = models.IntegerField()
@@ -91,11 +86,29 @@ class Student(models.Model):
     total_backlog = models.SmallIntegerField()
     linkedin = models.CharField(default="",max_length=200)
 
-    def __str__(self):
-        return self.roll.username + " " + self.first_name + " " + self.last_name
+class StudentPlacement(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    resume = models.CharField(default="",max_length=200)
+    undertaking = models.BooleanField()
+
+class StudentIntern(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    resume = models.CharField(default="",max_length=200)
+
+reasons = [
+    ('higher studies', "Higher Studies"),
+    ('research', "Research"),
+    ('govt job', "Government Jobs"),
+    ('enterprenuer', "Enterprenuer"),
+    ('other', "Others")
+]
+class StudentNotSitting(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=40, choices=reasons)
+    
 
 class ClusterChosen(models.Model):
-    student = models.ForeignKey(Student,on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE)
     cluster_1 = models.ForeignKey(Cluster,on_delete=models.CASCADE,related_name = "cluster_1")
     cluster_2 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_2")
     cluster_3 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_3")
@@ -107,11 +120,22 @@ class ClusterChosen(models.Model):
 class Recruited(models.Model):
     student = models.ForeignKey(Student,on_delete=models.CASCADE)
     drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
-    jobtype = models.CharField(choices=jtype,max_length=20)
+    class Meta:
+        abstract = True
 
+# This Table is only for oncampus placed students
+class Placed(Recruited):
+    # type = models.CharField(max_length=20, choices=[('offcampus',"Off Campus"),('oncampus',"Oncampus")])
+    pass
+
+class Interned(Recruited):
+    pass
+
+# For Offcampus placements as well as PPO
 class Got_PPO(models.Model):
     student = models.ForeignKey(Student,on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)# Foreign key banau?? kyunki may be kisi aisi company me placed hua ho jo hamare database me nhi h
+    profile = models.CharField(max_length=50)
     ctc = models.IntegerField() #in LPA
 
 

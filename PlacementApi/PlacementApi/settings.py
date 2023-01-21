@@ -85,11 +85,7 @@ DATABASES = {
         'NAME': 'college',
         'USER': 'root',
         'PASSWORD': '',
-<<<<<<< HEAD
-        'HOST': 'localhost',
-=======
         'HOST': 'localhost',  
->>>>>>> db_changes
         'PORT': '3306',
     }
 }
