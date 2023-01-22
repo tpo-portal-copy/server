@@ -17,6 +17,6 @@ class Announcement(models.Model):
     title = models.CharField(max_length=500)
     type = models.CharField(max_length=100)
     description = models.TextField()
-    time = models.DateTimeField(default=timezone.now())
+    time = models.DateTimeField(auto_now=True)
     tpo = models.ForeignKey(TPO, on_delete=models.CASCADE, null=True)
     tpr = models.ForeignKey(TPR, on_delete=models.CASCADE, null=True)

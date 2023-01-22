@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company,JNF,JNF_intern,JNF_placement,HR_details
+from .models import Company,HR_details,JNF,JNF_intern,JNF_placement
 # Register your models here.
 
 admin.site.register(Company)

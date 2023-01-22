@@ -16,7 +16,7 @@ class Drive(models.Model):
     starting_date = models.DateField()
     # drive type based on company type for e.g. IT, Mech Core, EE Core, etc..
     year = models.IntegerField()  # graduation year
-    job_type = models.CharField(max_length=10, choices=jtype)
+    job_type = models.CharField(max_length=15, choices=jtype)
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
 
 # class Branchallowed(models.Model):

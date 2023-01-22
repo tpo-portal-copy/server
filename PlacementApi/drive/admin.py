@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Drive,Branchallowed
+from .models import Drive
 
 # Register your models here.
 admin.site.register(Drive)
-admin.site.register(Branchallowed)
+# admin.site.register(Branchallowed)
