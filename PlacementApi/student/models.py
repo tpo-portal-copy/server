@@ -3,6 +3,7 @@ from course.models import Course,Specialization
 from company.models import Company
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from validators import Validate_file_size
 # Create your models here.
 
 from drive.models import Drive
@@ -53,7 +54,7 @@ class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/%Y/{0}.jpg'.format(instance.roll.username)
     roll = models.OneToOneField(User,on_delete=models.CASCADE)
-    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255)
+    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[Validate_file_size(1,"KB")])
     first_name = models.CharField(max_length=100)
     #roll = models.BigIntegerField(primary_key=True)
     middle_name = models.CharField(max_length=100,blank=True,null=True)

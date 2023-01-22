@@ -1,12 +1,13 @@
 from django.db import models
 from course.models import Specialization
+from validators import Validate_file_size
 
 # Create your models here.
 class Company(models.Model):
     def company_directory_path(instance, filename):
         return 'company_logos/{0}.jpg'.format(instance.name)
     name = models.CharField(max_length=100)
-    image_url = models.ImageField(upload_to= company_directory_path, max_length=255)
+    image_url = models.ImageField(upload_to= company_directory_path, max_length=255, validators=[Validate_file_size(1,"KB")])
     # type (IT or Core)
     def __str__(self) -> str:
         return self.name
@@ -43,7 +44,7 @@ class JNF_placement(models.Model):
     joining_date_placement = models.DateField()
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True)
+    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[Validate_file_size(5,"MB")])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
     def __str__(self) -> str:
         return self.jnf.company.name + " " + self.job_profile
@@ -57,7 +58,7 @@ class JNF_intern(models.Model):
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True)
+    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[Validate_file_size(5,"MB")])
     eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
     def __str__(self) -> str:
         return self.jnf.company.name + " " + self.job_profile
