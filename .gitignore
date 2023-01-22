@@ -1,7 +1,7 @@
 .idea
 myenv
 temp
-__pycache__
+__pycache__/
 migrations/
 !__init__.py
 .env
