@@ -7,7 +7,7 @@ class Company(models.Model):
     def company_directory_path(instance, filename):
         return 'company_logos/{0}.jpg'.format(instance.name)
     name = models.CharField(max_length=100)
-    image_url = models.ImageField(upload_to= company_directory_path, max_length=255, validators=[Validate_file_size(1,"KB")])
+    logo = models.ImageField(upload_to= company_directory_path, max_length=255, validators=[Validate_file_size(1,"KB")])
     # type (IT or Core)
     def __str__(self) -> str:
         return self.name

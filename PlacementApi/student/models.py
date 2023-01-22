@@ -125,16 +125,18 @@ class Recruited(models.Model):
     class Meta:
         abstract = True
 
-# This Table is only for oncampus placed students
+# This Table is only for oncampus placed students and PPO both
 class Placed(Recruited):
     # type = models.CharField(max_length=20, choices=[('offcampus',"Off Campus"),('oncampus',"Oncampus")])
+    is_ppo = models.BooleanField(default=False)
+    ctc_offered = models.FloatField()
     pass
 
 class Interned(Recruited):
     pass
 
-# For Offcampus placements as well as PPO
-class Got_PPO(models.Model):
+# For Offcampus placements
+class Offcampus(models.Model):
     student = models.ForeignKey(Student,on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)# Foreign key banau?? kyunki may be kisi aisi company me placed hua ho jo hamare database me nhi h
     profile = models.CharField(max_length=50)
