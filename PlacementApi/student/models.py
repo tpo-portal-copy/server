@@ -50,7 +50,10 @@ gender_types = [
     ('f','Female')
 ]
 class Student(models.Model):
+    def student_image_directory_path(instance, filename):
+        return 'student/%Y/{0}.jpg'.format(instance.roll.username)
     roll = models.OneToOneField(User,on_delete=models.CASCADE)
+    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255)
     first_name = models.CharField(max_length=100)
     #roll = models.BigIntegerField(primary_key=True)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
