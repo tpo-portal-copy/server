@@ -4,6 +4,7 @@ from course.models import Specialization
 # Create your models here.
 class Company(models.Model):
     name = models.CharField(max_length=100)
+    # image_url = models.ImageField(upload_to ='uploads/% Y/% m/% d/')
     # type (IT or Core)
 
 class HR_details(models.Model):
