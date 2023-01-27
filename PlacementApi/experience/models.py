@@ -23,6 +23,12 @@ c_type_choices = [
     ('archi core', "Architecture Core"),
     ('other', "Others")
 ]
+class Role(models.Model):
+    role = models.CharField(max_length=50)
+
+    def __str__(self) -> str:
+        return self.role 
+
 class Experience(models.Model):
     company = models.ForeignKey(Company,on_delete=models.CASCADE)
     difficulty = models.CharField(choices=diff_choices,max_length=5)
@@ -30,7 +36,7 @@ class Experience(models.Model):
     text = models.TextField()
     no_of_rounds = models.PositiveIntegerField()
     company_type = models.CharField(max_length=50, choices=c_type_choices) # denotes IT, Mech Core, etc..
-    # roles = 
+    roles = models.ForeignKey(Role,on_delete=models.CASCADE)
     datetime = models.DateTimeField()
     selected = models.BooleanField(default=False)
     anonymity = models.BooleanField(default=False)
