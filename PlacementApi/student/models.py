@@ -53,8 +53,8 @@ gender_types = [
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/%Y/{0}.jpg'.format(instance.roll.username)
-    roll = models.OneToOneField(User,on_delete=models.CASCADE)
-    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[Validate_file_size(1,"KB")])
+    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user",null = True)
+    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
     #roll = models.BigIntegerField(primary_key=True)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
@@ -62,6 +62,7 @@ class Student(models.Model):
     # college_email = models.EmailField(null=False)
     personal_email = models.EmailField(null=False)
     gender = models.CharField(default="m", choices = gender_types, max_length=1)
+    course = models.ForeignKey(Course,on_delete=models.CASCADE,null=True)
     branch = models.ForeignKey(Specialization,on_delete=models.CASCADE)
     pnumber = models.BigIntegerField(validators=[RegexValidator(regex=r'\d{10}$')])
     city = models.ForeignKey(City,on_delete=models.CASCADE)
@@ -86,16 +87,25 @@ class Student(models.Model):
     class_12_perc = models.FloatField()
     active_backlog = models.SmallIntegerField()
     total_backlog = models.SmallIntegerField()
+    jee_mains_rank = models.IntegerField(null= True) 
     linkedin = models.CharField(default="",max_length=200)
+
+    def __str__(self) -> str:
+        return self.roll.username
 
 class StudentPlacement(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE)
     resume = models.CharField(default="",max_length=200)
     undertaking = models.BooleanField()
 
+    def __str__(self) -> str:
+        return self.student.roll.username
+
 class StudentIntern(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE)
     resume = models.CharField(default="",max_length=200)
+    def __str__(self) -> str:
+        return self.student.roll.username
 
 reasons = [
     ('higher studies', "Higher Studies"),
@@ -107,15 +117,17 @@ reasons = [
 class StudentNotSitting(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE)
     reason = models.CharField(max_length=40, choices=reasons)
+    def __str__(self) -> str:
+        return self.student.roll.username
     
 
 class ClusterChosen(models.Model):
-    student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE)
+    student = models.OneToOneField(StudentPlacement,on_delete=models.CASCADE,related_name="cluster")
     cluster_1 = models.ForeignKey(Cluster,on_delete=models.CASCADE,related_name = "cluster_1")
     cluster_2 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_2")
     cluster_3 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_3")
     def __str__(self):
-        return self.student.first_name + " " + self.student.last_name
+        return self.student.student.first_name + " " + self.student.student.last_name
 
 
 
