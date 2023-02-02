@@ -100,15 +100,15 @@ class StudentPlacementDetail(APIView):
 
 class StudentInternList(APIView):
     def get(self,request):
-        queryset = StudentIntern.objects.all()
-
+        # queryset = StudentIntern.objects.all()
+        queryset = StudentIntern.objects.select_related('student')
         serialized_data = StudentInternSerializer(queryset,many = True)
         return Response(serialized_data.data)
 
     def post(self,request):
         new_student_intern = StudentInternSerializer(data = request.data)
         if new_student_intern.is_valid():
-            new_student_intern.save()    
+            new_student_intern.save(owner = request.user)    
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_intern.errors,status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,9 +116,7 @@ class StudentInternList(APIView):
 
 class StudentInternDetail(APIView):
     def get(self,request,pk):
-        # roll = Student.objects.get(roll__username = pk)
         student_intern = StudentIntern.objects.get(student__roll__username = pk )
-        # students = StudentPlacement.objects.get(student = roll)
         serialized_data = StudentInternSerializer(student_intern)
         return Response(serialized_data.data)
 
@@ -140,15 +138,15 @@ class StudentInternDetail(APIView):
 
 class StudentNotSittingList(APIView):
     def get(self,request):
-        queryset = StudentNotSitting.objects.all()
-
+        # queryset = StudentNotSitting.objects.all()
+        queryset = StudentNotSitting.objects.select_related('student')
         serialized_data = StudentNotSittingSerializer(queryset,many = True)
         return Response(serialized_data.data)
 
     def post(self,request):
         new_student_ns = StudentNotSittingSerializer(data = request.data)
         if new_student_ns.is_valid():
-            new_student_ns.save()    
+            new_student_ns.save(owner = request.user)    
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_ns.errors,status=status.HTTP_400_BAD_REQUEST)
 

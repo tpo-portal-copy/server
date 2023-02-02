@@ -89,7 +89,7 @@ class ClusterChosenSerializer(serializers.ModelSerializer):
 
 
 class StudentPlacementSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()
+    student = StudentSerializer(read_only = True)
     cluster = ClusterChosenSerializer(required = False)
 
     class Meta:
@@ -126,17 +126,30 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
 
 
 class StudentInternSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()
+    student = StudentSerializer(read_only = True)
     class Meta:
         model = StudentIntern
         fields = '__all__'
 
+    def create(self,validated_data):
+        owner = validated_data.pop("owner")
+        student_id = Student.objects.get(roll__username = owner)
+        intern_student = StudentIntern(student = student_id,**validated_data)
+        intern_student.save()
+        return intern_student
 
 class StudentNotSittingSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()
+    student = StudentSerializer(read_only = True)
     class Meta:
         model = StudentNotSitting
         fields = '__all__'
+
+    def create(self,validated_data):
+        owner = validated_data.pop("owner")
+        student_id = Student.objects.get(roll__username = owner)
+        not_sitting_student = StudentNotSitting(student = student_id,**validated_data)
+        not_sitting_student.save()
+        return not_sitting_student
 
     
 
