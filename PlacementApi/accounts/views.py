@@ -1,14 +1,10 @@
+from django.shortcuts import redirect
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-# from knox.models import AuthToken
 from .serializers import UserSerializer, RegisterSerializer
-from django.contrib.auth import login
 from rest_framework import permissions
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 # from rest_framework_simplejwt.views import jwt_views
-# from knox.views import LoginView as KnoxLoginView
-
-
 # Register API
 class RegisterAPI(generics.GenericAPIView):
     serializer_class = RegisterSerializer
