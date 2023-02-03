@@ -6,7 +6,8 @@ from validators import Validate_file_size
 class Company(models.Model):
     def company_directory_path(instance, filename):
         return 'company_logos/{0}.jpg'.format(instance.name)
-    name = models.CharField(max_length=100)
+
+    name = models.CharField(max_length=100, unique=True)
     logo = models.ImageField(upload_to= company_directory_path, max_length=255, validators=[Validate_file_size(10,"MB")])
     # type (IT or Core)
     def __str__(self) -> str:
@@ -19,7 +20,10 @@ class HR_details(models.Model):
     mobile = models.BigIntegerField()
     email = models.EmailField()
     def __str__(self) -> str:
-        return [self.company.name,self.type,self.name].join(" ")
+        return f"{self.company.name} {self.type} {self.name}"
+
+    class Meta:
+        unique_together = ("company", "type")
 
 class JNF(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)

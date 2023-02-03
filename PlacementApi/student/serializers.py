@@ -23,22 +23,16 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = '__all__'
 
-     
-
-
-
-
 class StudentSerializer(serializers.ModelSerializer):
     roll = UserSerializer()
     course = CourseSerializer()
     branch = BranchSerializer()
     city = CitySerializer()
 
-    
     class Meta:
         model = Student
         fields = '__all__'
-        
+
     def create(self, validated_data):
         
         user_data  = list(validated_data.pop('roll').items())
@@ -52,7 +46,6 @@ class StudentSerializer(serializers.ModelSerializer):
         branch = Specialization.objects.get(Q( branch_name = branch_data[0][1]) & Q(course = course))
         city = City.objects.get(name = city_data[0][1])
 
-      
         student = Student(roll = user,course = course,branch = branch,city = city,**validated_data)
         student.save()
         return student
@@ -82,7 +75,6 @@ class StudentSerializer(serializers.ModelSerializer):
         return instance
 
 class ClusterChosenSerializer(serializers.ModelSerializer):
-  
     class Meta:
         model = ClusterChosen
         exclude = ['student','id']
@@ -104,11 +96,10 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
         resume = validated_data.get("resume")
         undertaking = validated_data.get("undertaking")
 
-
         student_username = validated_data['student'].get('roll').get('username')
 
         student = Student.objects.get(roll__username = student_username)
-   
+
         student_placement = StudentPlacement(student = student,resume = resume,undertaking = undertaking)
 
         student_placement.save()

@@ -15,17 +15,16 @@ class StudentList(APIView):
         check_branch = request.query_params.get('branch')
         check_course = request.query_params.get('course')
         check_roll = request.query_params.get('roll')
-    
 
         if check_batch_year:
             queryset = queryset.filter(batch_year = check_batch_year)
-   
+
         if check_branch:
             queryset = queryset.filter(branch__branch_name = check_branch)
-      
+
         if check_course:
             queryset = queryset.filter(course__name = check_course)
-   
+
         if check_roll:
             queryset = queryset.filter(roll__username  = check_roll)
 
