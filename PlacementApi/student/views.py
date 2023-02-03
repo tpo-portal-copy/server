@@ -43,7 +43,7 @@ class StudentList(APIView):
 class StudentDetail(APIView):
     
     def get(self,request,pk):
-        students = Student.objects.get(pk=pk)
+        students = Student.objects.get(roll__username=pk)
         serialized_data = StudentSerializer(students)
         return Response(serialized_data.data)
 

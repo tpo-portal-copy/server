@@ -154,13 +154,3 @@ class Offcampus(models.Model):
     profile = models.CharField(max_length=50)
     ctc = models.IntegerField() #in LPA
 
-
-
-# class Education(models.Model):
-#     roll = models.ForeignKey(Student,on_delete=models.CASCADE)
-#     class_name = models.SmallIntegerField(default=10,null= False)
-#     school = models.ForeignKey(School,on_delete=models.CASCADE)
-#     percentage = models.FloatField(default=0,null = False)
-
-#     def __str__(self) -> str:
-#         return str(self.roll) + " " + self.class_name

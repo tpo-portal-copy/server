@@ -19,6 +19,9 @@ class Drive(models.Model):
     job_type = models.CharField(max_length=15, choices=jtype)
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
 
+    class Meta:
+        unique_together = ('company','job_type','year')
+
 # class Branchallowed(models.Model):
 #     drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
 #     branch = models.ForeignKey(Specialization,on_delete=models.CASCADE)
