@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from .models import Company, HR_details, JNF
-from .serializers import CompanySerializer, HRSerializer
+from .serializers import CompanySerializer, HRSerializer, JNFSerializer
 # from rest_framework.renderers import JSONRenderer
 # from rest_framework.decorators import api_view
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import generics
 
 # Create your views here.
@@ -38,6 +38,12 @@ class HRDestroyAPIView(generics.DestroyAPIView):
     serializer_class = HRSerializer
     queryset = HR_details.objects.all()
 
-class JNFFormAPIView(generics.ListCreateAPIView):
-    queryset = HR_details.objects.all()
-    serializer_class = HRSerializer
+class JNFCreateAPIView(generics.CreateAPIView):
+    queryset = JNF.objects.all()
+    serializer_class = JNFSerializer
+
+class JNFList(APIView):
+    def get(self, request):
+        jnf_list = {"jnfs":dict([jnf.company.name for jnf in JNF.objects.all()])}
+        return Response(jnf_list)
+        pass

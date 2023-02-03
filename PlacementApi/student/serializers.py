@@ -34,12 +34,10 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        
         user_data  = list(validated_data.pop('roll').items())
         course_data  = list(validated_data.pop('course').items())
         branch_data = list(validated_data.pop('branch').items())
         city_data = list(validated_data.pop('city').items())
-
 
         user = User.objects.get(username = user_data[0][1])
         course = Course.objects.get(name = course_data[0][1])
@@ -49,7 +47,6 @@ class StudentSerializer(serializers.ModelSerializer):
         student = Student(roll = user,course = course,branch = branch,city = city,**validated_data)
         student.save()
         return student
-
 
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name',instance.first_name)
@@ -109,11 +106,6 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
         cluster_chosen.save()
 
         return student_placement
-
-
-
-
-        
 
 
 class StudentInternSerializer(serializers.ModelSerializer):

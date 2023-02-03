@@ -52,7 +52,7 @@ gender_types = [
 ]
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
-        return 'student/%Y/{0}.jpg'.format(instance.roll.username)
+        return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
     roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user",null = True)
     image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
@@ -68,8 +68,8 @@ class Student(models.Model):
     city = models.ForeignKey(City,on_delete=models.CASCADE)
     pincode = models.BigIntegerField()
     dob = models.DateField(null=True)
-    batch_year = models.IntegerField() # for starting year at clg
-    current_year = models.IntegerField()  # choices to be extracted from CourseYearAllowed table at frontend
+    batch_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')]) # for starting year at clg
+    current_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{1}$')])  # choices to be extracted from CourseYearAllowed table at frontend
     # sitting_for = models.CharField(default = "placement" ,choices=jtype,max_length=100)
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
     # resume = models.CharField(default="",max_length=200)
@@ -77,11 +77,11 @@ class Student(models.Model):
     cgpi = models.DecimalField(max_digits=4, decimal_places = 2, default=0)
     gate_score = models.IntegerField(blank=True, null= True)
     cat_score = models.FloatField(blank=True, null = True)
-    class_10_year = models.IntegerField()
+    class_10_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
     # class_10_school = models.CharField(default="",max_length=200)
     # class_10_board = models.CharField(default="",max_length=200)
     class_10_perc = models.FloatField()
-    class_12_year = models.IntegerField()
+    class_12_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
     # class_12_school = models.CharField(default="",max_length=200)
     # class_12_board = models.CharField(default="",max_length=200)
     class_12_perc = models.FloatField()
