@@ -8,5 +8,6 @@ urlpatterns = [
     path('<str:name>/hr/',views.HRListAPIView.as_view()),
     path('<str:name>/hr/<int:pk>',views.HRDestroyAPIView.as_view()),
     path('add-hr/',views.HRCreateAPIView.as_view()),
-    path('jnf/',views.JNFFormAPIView.as_view()),
+    path('jnf/',views.JNFList.as_view()),
+    path('add-jnf/',views.JNFCreateAPIView.as_view()),
 ]

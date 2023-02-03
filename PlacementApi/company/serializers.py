@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, HR_details
+from .models import Company, HR_details, JNF
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,4 +20,11 @@ class HRSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
     class Meta:
         model = HR_details
+        fields = '__all__'
+
+class JNFSerializer(serializers.ModelSerializer):
+    # company = CompanySerializer()
+    company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
+    class Meta:
+        model = JNF
         fields = '__all__'
