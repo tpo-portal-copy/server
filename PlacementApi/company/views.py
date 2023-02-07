@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Company, HR_details, JNF
-from .serializers import CompanySerializer, HRSerializer, JNFSerializer
+from .models import Company, HR_details, JNF, JNF_placement, JNF_intern
+from .serializers import CompanySerializer, HRSerializer, JNFSerializer, JNFPlacementSerializer, JNFInternSerializer
 # from rest_framework.renderers import JSONRenderer
 # from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -44,6 +44,32 @@ class JNFCreateAPIView(generics.CreateAPIView):
 
 class JNFList(APIView):
     def get(self, request):
-        jnf_list = {"jnfs":dict([jnf.company.name for jnf in JNF.objects.all()])}
+        jnf_list = {"placement":[jnf.jnf.company.name for jnf in JNF_placement.objects.all()],
+                    "intern":[jnf.jnf.company.name for jnf in JNF_intern.objects.all()]}
         return Response(jnf_list)
-        pass
+
+class JNFRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = JNF.objects.all()
+    serializer_class = JNFSerializer
+    lookup_field = ('company__name')
+    lookup_url_kwarg = ('company')
+
+class JNFPlacementAPIView(generics.ListAPIView):
+    queryset = JNF_placement.objects.all()
+    serializer_class = JNFPlacementSerializer
+
+class JNFPlacementRetrieveAPIView(generics.RetrieveUpdateAPIView):
+    queryset = JNF_placement.objects.all()
+    serializer_class = JNFPlacementSerializer
+    lookup_field = ('jnf__company__name')
+    lookup_url_kwarg = ('company')
+
+class JNFInternAPIView(generics.ListAPIView):
+    queryset = JNF_intern.objects.all()
+    serializer_class = JNFInternSerializer
+
+class JNFInternRetrieveAPIView(generics.RetrieveUpdateAPIView):
+    queryset = JNF_intern.objects.all()
+    serializer_class = JNFInternSerializer
+    lookup_field = ('jnf__company__name')
+    lookup_url_kwarg = ('company')
