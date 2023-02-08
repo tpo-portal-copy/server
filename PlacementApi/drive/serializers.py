@@ -10,9 +10,9 @@ class DriveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Drive
-        # fields = '__all__'
-        exclude = ['job_desc']
-
+        fields = '__all__'
+        # exclude = ['job_desc']
+     
     def create(self,validated_data):
         name = validated_data["company"]
         eligible_batches = validated_data.pop("eligible_batches")
@@ -26,11 +26,6 @@ class DriveSerializer(serializers.ModelSerializer):
             specialization = Specialization.objects.get(course = batches['course'],branch_name = batches["branch_name"])
             drive.eligible_batches.add(specialization)
         return drive
-
-
-        # if validated_data["job_type"] == "placement":
-        #     jnf = JNF_placement.objects.get(jnf__company = name,)
-        #     jnf.delete()
 
     def update(self, instance, validated_data):
         name = validated_data["company"]

@@ -23,26 +23,47 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = '__all__'
 
+
+
+class ClusterChosenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClusterChosen
+        exclude = ['student','id']
+
 class StudentSerializer(serializers.ModelSerializer):
     roll = UserSerializer()
+    # roll  = serializers.CharField(source = 'roll.username')
     course = CourseSerializer()
     branch = BranchSerializer()
     city = CitySerializer()
+    # student_placement = StudentPlacementSerializer(read_only = True,required = False)
+    # student_intern = StudentInternSerializer(read_only = True,required = False)
+   
+    # personal_email = serializers.EmailField(write_only = True)
 
     class Meta:
         model = Student
         fields = '__all__'
 
     def create(self, validated_data):
-        user_data  = list(validated_data.pop('roll').items())
-        course_data  = list(validated_data.pop('course').items())
-        branch_data = list(validated_data.pop('branch').items())
-        city_data = list(validated_data.pop('city').items())
 
-        user = User.objects.get(username = user_data[0][1])
-        course = Course.objects.get(name = course_data[0][1])
-        branch = Specialization.objects.get(Q( branch_name = branch_data[0][1]) & Q(course = course))
-        city = City.objects.get(name = city_data[0][1])
+        user_data = validated_data["roll"].get("username")
+        validated_data.pop('roll')
+     
+        course_data = validated_data["course"].get('name')
+        validated_data.pop('course')
+        branch_data = validated_data["branch"].get('branch_name')
+        validated_data.pop('branch')
+        city_data = validated_data["city"].get("name")
+        validated_data.pop('city')
+      
+
+
+        user = User.objects.get(username = user_data)
+        course = Course.objects.get(name = course_data)
+        branch = Specialization.objects.get(Q( branch_name = branch_data) & Q(course = course))
+        city = City.objects.get(name = city_data)
+
 
         student = Student(roll = user,course = course,branch = branch,city = city,**validated_data)
         student.save()
@@ -71,31 +92,29 @@ class StudentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class ClusterChosenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClusterChosen
-        exclude = ['student','id']
+    
 
 
 class StudentPlacementSerializer(serializers.ModelSerializer):
     student = StudentSerializer(read_only = True)
-    cluster = ClusterChosenSerializer(required = False)
+    cluster = ClusterChosenSerializer()
+    roll = serializers.CharField(write_only = True)
 
     class Meta:
         model = StudentPlacement
         fields = '__all__'
 
     def create(self,validated_data):
+        print(validated_data)
         cluster_1 = validated_data["cluster"].get('cluster_1')
         cluster_2 = validated_data["cluster"].get('cluster_2')
         cluster_3 = validated_data["cluster"].get('cluster_3')
         validated_data.pop('cluster')
         resume = validated_data.get("resume")
         undertaking = validated_data.get("undertaking")
+        roll = validated_data.pop('roll')
 
-        student_username = validated_data['student'].get('roll').get('username')
-
-        student = Student.objects.get(roll__username = student_username)
+        student = Student.objects.get(roll__username = roll)
 
         student_placement = StudentPlacement(student = student,resume = resume,undertaking = undertaking)
 
@@ -110,31 +129,36 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
 
 class StudentInternSerializer(serializers.ModelSerializer):
     student = StudentSerializer(read_only = True)
+    roll = serializers.CharField(write_only = True)
     class Meta:
         model = StudentIntern
-        fields = '__all__'
+        fields = ['student','resume','roll']
 
     def create(self,validated_data):
-        owner = validated_data.pop("owner")
-        student_id = Student.objects.get(roll__username = owner)
+        roll = validated_data.pop("roll")
+        # owner = validated_data.pop("owner")
+        student_id = Student.objects.get(roll__username = roll)
         intern_student = StudentIntern(student = student_id,**validated_data)
         intern_student.save()
         return intern_student
 
 class StudentNotSittingSerializer(serializers.ModelSerializer):
     student = StudentSerializer(read_only = True)
+    roll = serializers.CharField(write_only = True)
     class Meta:
         model = StudentNotSitting
         fields = '__all__'
 
     def create(self,validated_data):
-        owner = validated_data.pop("owner")
-        student_id = Student.objects.get(roll__username = owner)
+        # owner = validated_data.pop("owner")
+        roll = validated_data.pop("roll")
+        student_id = Student.objects.get(roll__username = roll)
         not_sitting_student = StudentNotSitting(student = student_id,**validated_data)
         not_sitting_student.save()
         return not_sitting_student
 
-    
+
+
 
 
         

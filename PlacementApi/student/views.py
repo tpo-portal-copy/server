@@ -5,7 +5,21 @@ from .models import *
 from .serializers import *
 from rest_framework import status
 from course.models import CourseYearAllowed
+from .filters import StudentPlacementFilter
 
+
+class RouteList(APIView):
+    def get(self,request):
+        routes = {'student/' : "to get list of students basic info",
+                  'student/<str:pk>' : "this will give data of specific student also used for create , update and delete",
+                  'student/detailplacement/' : 'to get list of students placement info',
+                  'student/detailplacement/<str:pk>' : "this will give data of specific student placement  also used for create , update and delete",
+                  'student/detailintern/':"to get list of students placement info",
+                  'student/detailintern/<str:pk>':"this will give data of specific student intern also used for create , update and delete",
+                  'student/detailnositting/':"to get list of students who are not sitting in placement info",
+                  'student/detailintern/<str:pk>':"this will give data of specific student not sitting also used for create , update and delete"}
+
+        return Response(routes)
 
 class StudentList(APIView):
     def get(self,request):
@@ -15,6 +29,7 @@ class StudentList(APIView):
         check_branch = request.query_params.get('branch')
         check_course = request.query_params.get('course')
         check_roll = request.query_params.get('roll')
+        check_cgpi = request.query_params.get('cgpi')
 
         if check_batch_year:
             queryset = queryset.filter(batch_year = check_batch_year)
@@ -27,6 +42,11 @@ class StudentList(APIView):
 
         if check_roll:
             queryset = queryset.filter(roll__username  = check_roll)
+
+        if check_cgpi:
+            queryset = queryset.filter(cgpi__gte = check_cgpi)
+
+        
 
         serialized_data = StudentSerializer(queryset,many = True)
         return Response(serialized_data.data)
@@ -61,17 +81,19 @@ class StudentDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class StudentPlacementList(APIView):
+    filter_class = StudentPlacementFilter
     def get(self,request):
         queryset = StudentPlacement.objects.select_related('student').all()
         queryset = queryset.prefetch_related('cluster').all()
 
+        queryset = self.filter_class(request.query_params,queryset).qs
         serialized_data = StudentPlacementSerializer(queryset,many = True)
         return Response(serialized_data.data)
 
     def post(self,request):
         new_student_placement = StudentPlacementSerializer(data = request.data)
         if new_student_placement.is_valid():
-            new_student_placement.save()    
+            new_student_placement.save()   #owner = request.user 
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_placement.errors,status=status.HTTP_400_BAD_REQUEST)
 
@@ -107,7 +129,7 @@ class StudentInternList(APIView):
     def post(self,request):
         new_student_intern = StudentInternSerializer(data = request.data)
         if new_student_intern.is_valid():
-            new_student_intern.save(owner = request.user)    
+            new_student_intern.save()  #owner = request.user   
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_intern.errors,status=status.HTTP_400_BAD_REQUEST)
 
@@ -145,7 +167,7 @@ class StudentNotSittingList(APIView):
     def post(self,request):
         new_student_ns = StudentNotSittingSerializer(data = request.data)
         if new_student_ns.is_valid():
-            new_student_ns.save(owner = request.user)    
+            new_student_ns.save() #owner = request.user    
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_ns.errors,status=status.HTTP_400_BAD_REQUEST)
 

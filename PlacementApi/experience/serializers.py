@@ -3,12 +3,17 @@ from student.models import Student
 from company.models import Company
 from .models import Role,Experience
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['role']
+
 class StudentListingField(serializers.RelatedField):
     def to_representation(self, value):
         return value.roll.username
 
     def to_internal_value(self, value):
-        print(Student.objects.get(roll__username = value))
+        # print(Student.objects.get(roll__username = value))
         return Student.objects.get(roll__username = value)
 
 
@@ -17,6 +22,9 @@ class ExperienceSerializer(serializers.ModelSerializer):
     # student = serializers.SlugRelatedField(queryset = Student.objects.all(),slug_field='roll')
     student = StudentListingField(queryset = Student.objects.all())
     roles = serializers.SlugRelatedField(queryset = Role.objects.all(),slug_field='role')
+    
+
+
     class Meta:
         model = Experience
         fields = '__all__'
