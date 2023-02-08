@@ -2,11 +2,7 @@ from rest_framework import serializers
 from .models import *
 from company.models import JNF_placement,JNF_intern,Company
 from course.models import Specialization,Course
-class SpecialisationSerializer(serializers.ModelSerializer):
-    course = serializers.SlugRelatedField(queryset = Course.objects.all(),slug_field="name")
-    class Meta:
-        model = Specialization
-        fields = '__all__'
+from course.serializers import SpecialisationSerializer
 
 class DriveSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset =Company.objects.all(),slug_field="name")
@@ -17,8 +13,6 @@ class DriveSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # exclude = ['job_desc']
      
-    
-
     def create(self,validated_data):
         name = validated_data["company"]
         eligible_batches = validated_data.pop("eligible_batches")

@@ -46,6 +46,7 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+
         user_data = validated_data["roll"].get("username")
         validated_data.pop('roll')
      
@@ -63,10 +64,10 @@ class StudentSerializer(serializers.ModelSerializer):
         branch = Specialization.objects.get(Q( branch_name = branch_data) & Q(course = course))
         city = City.objects.get(name = city_data)
 
+
         student = Student(roll = user,course = course,branch = branch,city = city,**validated_data)
         student.save()
         return student
-
 
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name',instance.first_name)
@@ -124,11 +125,6 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
         cluster_chosen.save()
 
         return student_placement
-
-
-
-
-        
 
 
 class StudentInternSerializer(serializers.ModelSerializer):

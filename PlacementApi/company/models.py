@@ -1,6 +1,7 @@
 from django.db import models
 from course.models import Specialization
 from validators import Validate_file_size
+from django.core.validators import RegexValidator
 
 # Create your models here.
 class Company(models.Model):
@@ -48,6 +49,7 @@ class JNF_placement(models.Model):
     joining_date_placement = models.DateField()
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
+    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[Validate_file_size(5,"MB")])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
     def __str__(self) -> str:
