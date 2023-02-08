@@ -94,7 +94,7 @@ class Student(models.Model):
         return self.roll.username
 
 class StudentPlacement(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE,related_name='student_placement')
     resume = models.CharField(default="",max_length=200)
     undertaking = models.BooleanField()
 
@@ -102,7 +102,7 @@ class StudentPlacement(models.Model):
         return self.student.roll.username
 
 class StudentIntern(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE ,related_name='student_intern')
     resume = models.CharField(default="",max_length=200)
     def __str__(self) -> str:
         return self.student.roll.username
