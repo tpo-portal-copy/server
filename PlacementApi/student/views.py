@@ -5,7 +5,8 @@ from .models import *
 from .serializers import *
 from rest_framework import status
 from course.models import CourseYearAllowed
-from .filters import StudentPlacementFilter
+from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter
+from .pagination import CustomPagination
 
 
 class RouteList(APIView):
@@ -22,13 +23,15 @@ class RouteList(APIView):
         return Response(routes)
 
 class StudentList(APIView):
+    pagination_class = CustomPagination
+    
     def get(self,request):
         queryset = Student.objects.select_related('roll').all()
 
         check_batch_year = request.query_params.get('batch_year')
         check_branch = request.query_params.get('branch')
         check_course = request.query_params.get('course')
-        check_roll = request.query_params.get('roll')
+        check_roll = request.query_params.get('student')
         check_cgpi = request.query_params.get('cgpi')
 
         if check_batch_year:
@@ -45,11 +48,11 @@ class StudentList(APIView):
 
         if check_cgpi:
             queryset = queryset.filter(cgpi__gte = check_cgpi)
-
         
-
+        # queryset = queryset.order_by('cgpi')
+        queryset = self.pagination_class().paginate_queryset(queryset,request)
         serialized_data = StudentSerializer(queryset,many = True)
-        return Response(serialized_data.data)
+        return self.pagination_class().get_paginated_response(serialized_data.data)
 
     def post(self,request):
     
@@ -120,9 +123,11 @@ class StudentPlacementDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class StudentInternList(APIView):
+    filter_class = StudentInternFilter
     def get(self,request):
         # queryset = StudentIntern.objects.all()
         queryset = StudentIntern.objects.select_related('student')
+        queryset = self.filter_class(request.query_params,queryset).qs
         serialized_data = StudentInternSerializer(queryset,many = True)
         return Response(serialized_data.data)
 
@@ -158,9 +163,11 @@ class StudentInternDetail(APIView):
 
 
 class StudentNotSittingList(APIView):
+    filter_class = StudentNSFilter
     def get(self,request):
         # queryset = StudentNotSitting.objects.all()
         queryset = StudentNotSitting.objects.select_related('student')
+        queryset = self.filter_class(request.query_params,queryset).qs
         serialized_data = StudentNotSittingSerializer(queryset,many = True)
         return Response(serialized_data.data)
 
