@@ -1,5 +1,6 @@
 import  django_filters
-from .models import Experience,Role
+from .models import Experience
+from drive.models import Role
 
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
     pass

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from student.models import Student 
 from company.models import Company
-from .models import Role,Experience
+from .models import Experience
+from drive.models import Role
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:

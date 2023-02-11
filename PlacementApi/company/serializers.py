@@ -118,13 +118,22 @@ class JNFInternSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def validate_duration(self, value):
+        if(value <= 0):
+            raise serializers.ValidationError('Internship duration must be at least 1 month')
+        elif(value > 6):
+            raise serializers.ValidationError('Our college does not allow for internship for more than 6 months')
+
+        print(value)
+        return value
+
 
 class JNFSerializer(serializers.ModelSerializer):
     # company = CompanySerializer()
     company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
     jnf_placement = JNFPlacementSerializer(read_only = True,required = False)
     jnf_intern = JNFInternSerializer(read_only = True,required = False)
-    hr = HRSerializer(many = True)
+    # hr = HRSerializer(many = True)
     class Meta:
         model = JNF
         fields = '__all__'
@@ -145,7 +154,7 @@ class JNFSerializer(serializers.ModelSerializer):
         jnf.save()
 
         # print(new_hr)
-        jnf.hr.set(new_hr)
+        # jnf.hr.set(new_hr)
 
         # validated_data['hr'] = new_hr
         # return jnf

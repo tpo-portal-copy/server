@@ -13,6 +13,7 @@ urlpatterns = [
     path('jnfplacements/',views.JNFPlacementAPIView.as_view()),
     path('jnfplacements/<str:company>',views.JNFPlacementRetrieveAPIView.as_view()),
     path('jnfinterns/',views.JNFInternAPIView.as_view()),
+    path('jnfinterns/create/',views.JNFInternCreateAPIView.as_view()),
     path('jnfinterns/<str:company>',views.JNFInternRetrieveAPIView.as_view()),
     path('add-jnf/',views.JNFCreateAPIView.as_view()),
 ]
