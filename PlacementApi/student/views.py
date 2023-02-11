@@ -49,10 +49,12 @@ class StudentList(APIView):
         if check_cgpi:
             queryset = queryset.filter(cgpi__gte = check_cgpi)
         
-        # queryset = queryset.order_by('cgpi')
-        queryset = self.pagination_class().paginate_queryset(queryset,request)
+        queryset = queryset.order_by('cgpi')
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
+        print(type(queryset))
         serialized_data = StudentSerializer(queryset,many = True)
-        return self.pagination_class().get_paginated_response(serialized_data.data)
+        return paginator.get_paginated_response(serialized_data.data)
 
     def post(self,request):
     

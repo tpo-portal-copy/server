@@ -8,12 +8,6 @@ from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 from rest_framework import generics
 
-# Create your views here.
-# @api_view(['GET','POST'])
-# class CompanyAPIView(generics.CreateAPIView):
-#     queryset = Company.objects.all()
-#     serializer_class = CompanySerializer
-
 class CompanyDetailAPIView(generics.RetrieveUpdateAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
