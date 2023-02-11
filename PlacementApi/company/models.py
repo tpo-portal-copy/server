@@ -1,7 +1,7 @@
 from django.db import models
 from course.models import Specialization
 from validators import Validate_file_size
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, FileExtensionValidator
 from django.dispatch import receiver
 import os
 
@@ -12,7 +12,7 @@ class Company(models.Model):
         return 'company_logos/{0}.jpg'.format(instance.name)
 
     name = models.CharField(max_length=100, unique=True)
-    logo = models.ImageField(upload_to= company_directory_path, null = True, max_length=255, validators=[Validate_file_size(10,"MB")])
+    logo = models.ImageField(upload_to= company_directory_path, null = True, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']),Validate_file_size(10,"MB")])
     # type (IT or Core)
     def __str__(self) -> str:
         return self.name
@@ -28,7 +28,7 @@ class HR_details(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     type = models.CharField(default = 'primary', choices = [('primary','Primary'), ('secondary','Secondary')],max_length=10)
     name = models.CharField(max_length=50)
-    mobile = models.BigIntegerField()
+    mobile = models.BigIntegerField(validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
     email = models.EmailField()
     def __str__(self) -> str:
         return f"{self.company.name} {self.type} {self.name}"
@@ -50,7 +50,8 @@ class JNF(models.Model):
     no_of_persons_visiting = models.IntegerField(default=0) # 0 if drive is virtual
     job_location = models.CharField(max_length=100) # Separate different job locations with any delimeter
     tentative_drive_date = models.DateField()
-    hr = models.ManyToManyField(HR_details, blank=True)
+    # hr = models.ManyToManyField(HR_details, blank=True)
+    is_approved = models.BooleanField(default=False)
     def __str__(self):
         return self.company.name + " " + self.mode_of_hiring
 
@@ -62,7 +63,7 @@ class JNF_placement(models.Model):
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[Validate_file_size(5,"MB")])
+    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField()
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
     def __str__(self) -> str:
@@ -78,7 +79,7 @@ class JNF_intern(models.Model):
     job_profile = models.CharField(max_length=100)
     stipend = models.FloatField() # stipend to be given per month in thousands
     ctc = models.FloatField()  # expected ctc to be given if 
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[Validate_file_size(5,"MB")])
+    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField()  # default cgpi puchni h
     eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
     def __str__(self) -> str:

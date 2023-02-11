@@ -1,8 +1,9 @@
 from django.db import models
 from course.models import Course,Specialization
 from company.models import Company
+from drive.models import JobRoles, Role
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, FileExtensionValidator
 from validators import Validate_file_size
 # Create your models here.
 
@@ -26,11 +27,11 @@ class City(models.Model):
         return self.name + " " + self.state.name
 
 
-class School(models.Model):
-    name = models.CharField(default="",max_length=200)
-    board = models.CharField(default="",max_length=200)
-    def __str__(self) -> str:
-        return self.name
+# class School(models.Model):
+#     name = models.CharField(default="",max_length=200)
+#     board = models.CharField(default="",max_length=200)
+#     def __str__(self) -> str:
+#         return self.name
 
 class Cluster(models.Model):
     Cluster_id = models.IntegerField(primary_key=True)
@@ -54,12 +55,10 @@ class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
     roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user",null = True)
-    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[Validate_file_size(10,"MB")],null=True)
+    image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']), Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
-    #roll = models.BigIntegerField(primary_key=True)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
     last_name = models.CharField(max_length = 100,blank=True,null=True)
-    # college_email = models.EmailField(null=False)
     personal_email = models.EmailField(null=False)
     gender = models.CharField(default="m", choices = gender_types, max_length=1)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,null=True)
@@ -70,20 +69,18 @@ class Student(models.Model):
     dob = models.DateField(null=True)
     batch_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')]) # for starting year at clg
     current_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{1}$')])  # choices to be extracted from CourseYearAllowed table at frontend
-    # sitting_for = models.CharField(default = "placement" ,choices=jtype,max_length=100)
+    passing_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
-    # resume = models.CharField(default="",max_length=200)
-    # undertaking = models.BooleanField()
     cgpi = models.DecimalField(max_digits=4, decimal_places = 2, default=0)
     gate_score = models.IntegerField(blank=True, null= True)
     cat_score = models.FloatField(blank=True, null = True)
     class_10_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
-    # class_10_school = models.CharField(default="",max_length=200)
-    # class_10_board = models.CharField(default="",max_length=200)
+    class_10_school = models.CharField(default="",max_length=200)
+    class_10_board = models.CharField(default="",max_length=200)
     class_10_perc = models.FloatField()
     class_12_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
-    # class_12_school = models.CharField(default="",max_length=200)
-    # class_12_board = models.CharField(default="",max_length=200)
+    class_12_school = models.CharField(default="",max_length=200)
+    class_12_board = models.CharField(default="",max_length=200)
     class_12_perc = models.FloatField()
     active_backlog = models.SmallIntegerField()
     total_backlog = models.SmallIntegerField()
@@ -132,25 +129,39 @@ class ClusterChosen(models.Model):
 
 
 class Recruited(models.Model):
-    student = models.ForeignKey(Student,on_delete=models.CASCADE)
     drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
+    job_role = models.ForeignKey(JobRoles, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         abstract = True
 
 # This Table is only for oncampus placed students and PPO both
 class Placed(Recruited):
-    # type = models.CharField(max_length=20, choices=[('offcampus',"Off Campus"),('oncampus',"Oncampus")])
-    is_ppo = models.BooleanField(default=False)
-    ctc_offered = models.FloatField()
-    pass
+    student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE)
+
 
 class Interned(Recruited):
-    pass
+    student = models.ForeignKey(StudentIntern,on_delete=models.CASCADE)
+
+
+
+class BaseClass(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    ctc = models.FloatField() # in LPA
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        abstract = True
+
+
+class PPO(BaseClass):
+    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
 
 # For Offcampus placements
 class Offcampus(models.Model):
-    student = models.ForeignKey(Student,on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)# Foreign key banau?? kyunki may be kisi aisi company me placed hua ho jo hamare database me nhi h
-    profile = models.CharField(max_length=50)
-    ctc = models.IntegerField() #in LPA
+    # Add the company in Company Table if it does not exist in case of Offcampus placements
+    profile = models.ForeignKey(Role, on_delete=models.CASCADE)
+    
 

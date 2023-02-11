@@ -116,6 +116,10 @@ class JNFInternAPIView(generics.ListAPIView):
     queryset = JNF_intern.objects.all()
     serializer_class = JNFInternSerializer
 
+class JNFInternCreateAPIView(generics.CreateAPIView):
+    queryset = JNF_intern.objects.all()
+    serializer_class = JNFInternSerializer
+
 class JNFInternRetrieveAPIView(generics.RetrieveUpdateAPIView):
     queryset = JNF_intern.objects.all()
     serializer_class = JNFInternSerializer
