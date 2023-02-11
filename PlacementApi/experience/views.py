@@ -7,6 +7,7 @@ from .serializers import *
 from rest_framework.response import Response
 from .filters import *
 from django_filters import rest_framework as filters
+from student.pagination import CustomPagination
 # Create your views here.
 
 # def roll_filling(request):
@@ -32,6 +33,7 @@ class ExperienceList(generics.ListCreateAPIView):
     serializer_class = ExperienceSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ExperienceFilter
+    pagination_class = CustomPagination
 
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
