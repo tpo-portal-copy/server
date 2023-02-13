@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-from company.models import JNF_placement,JNF_intern,Company
+from company.models import JNF_placement,JNF_intern,Company,JNF
 from course.models import Specialization,Course
 from course.serializers import SpecialisationSerializer
 
@@ -11,13 +11,13 @@ class DriveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Drive
         fields = '__all__'
-        # exclude = ['job_desc']
+    
 
     def create(self,validated_data):
         name = validated_data["company"]
+        jnf = JNF.objects.get(company__name = validated_data["company"])
         eligible_batches = validated_data.pop("eligible_batches")
-        # print(eligible_batches)
-        # validated_data["job_desc"] = name.name+validated_data["name"]
+       
 
         drive = Drive(**validated_data)
         drive.save()

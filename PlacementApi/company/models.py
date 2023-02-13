@@ -36,6 +36,11 @@ class HR_details(models.Model):
     class Meta:
         unique_together = ("company", "type")
 
+# custom model manager for excluding banned student
+class JNFManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_approved = True) 
+
 class JNF(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
@@ -52,6 +57,9 @@ class JNF(models.Model):
     tentative_drive_date = models.DateField()
     # hr = models.ManyToManyField(HR_details, blank=True)
     is_approved = models.BooleanField(default=False)
+
+    approved = JNFManager()
+    objects = models.Manager()
     def __str__(self):
         return self.company.name + " " + self.mode_of_hiring
 
