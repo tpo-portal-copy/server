@@ -33,16 +33,6 @@ class HRDestroyAPIView(generics.DestroyAPIView):
     serializer_class = HRSerializer
     queryset = HR_details.objects.all()
 
-
-def get_or_none(classmodel, **kwargs):
-    try:
-        return classmodel.objects.get(**kwargs)
-    except classmodel.MultipleObjectsReturned as e:
-        print('ERR====>', e)
-
-    except classmodel.DoesNotExist:
-        return None
-
 class JNFCreateAPIView(generics.CreateAPIView):
     queryset = JNF.objects.all()
     serializer_class = JNFSerializer
@@ -50,44 +40,58 @@ class JNFCreateAPIView(generics.CreateAPIView):
         # print(request.data)
         jnf = JNFSerializer(data=request.data)
 
-        if(not get_or_none(Company, name=request.data['company'])):
+        try:
+            Company.objects.get(name = request.data['company'])
+        except Company.DoesNotExist:
             serializer = CompanySerializer(data={"name":request.data['company']})
             if serializer.is_valid():
                 serializer.save()
             else:
+                print(serializer.errors)
                 raise APIException("Error in Company Serializer")
 
-        # if (not request.data['jnf_intern']) and (not request.data['jnf_placement']):
-        #     print("You cannot insert data with no fields")
-        #     raise APIException("Please provide details from either your internship or placement")
+        if (not request.data['jnf_intern']) and (not request.data['jnf_placement']):
+            print("You cannot insert data with no fields")
+            raise APIException("Please provide details from either your internship or placement")
 
         if(jnf.is_valid()):
             jnf.save()
         else:
-            print(jnf.errors)
-            raise APIException("Please provide Basic JNF details in valid format")
+            raise APIException(jnf.errors)
 
         if(request.data['jnf_intern']):
-            # print(request.data['jnf_intern'])
             serializer = JNFInternSerializer(data=request.data['jnf_intern'])
-            # print(serializer)
-            # print(serializer.data)
             if(serializer.is_valid()):
                 serializer.save()
             else:
-                print("Invalid data")
-                print(serializer.errors)
+                raise APIException(serializer.errors)
 
         if(request.data['jnf_placement']):
-            # print(request.data['jnf_placement'])
             serializer = JNFPlacementSerializer(data=request.data['jnf_placement'])
-            # print(serializer)
-            # print(serializer.data)
             if(serializer.is_valid()):
                 serializer.save()
             else:
-                print("Invalid data")
-                print(serializer.errors)
+                raise APIException(serializer.errors)
+
+        if(len(request.data['hr']) > 0):
+            for hr in request.data['hr']:
+                try:
+                    hr_instance = HR_details.objects.get(company__name = hr['company'], type=hr['type'])
+                    serializer = HRSerializer(hr_instance, data = {"company":hr['company'], "type":hr['type'],"name":hr["name"],"mobile":hr['mobile'],"email":hr["email"]})
+                    if(serializer.is_valid()):
+                        serializer.save()
+                    else:
+                        print(serializer.errors)
+                        raise APIException("Error in updating HR_Details due to invalid format")
+                except HR_details.DoesNotExist:
+                    serializer = HRSerializer(data = {"company":hr['company'], "type":hr['type'],"name":hr["name"],"mobile":hr['mobile'],"email":hr["email"]})
+                    if(serializer.is_valid()):
+                        serializer.save()
+                    else:
+                        print(serializer.errors)
+                        raise APIException("HR_Details in invalid format")
+                except HR_details.MultipleObjectsReturned:
+                    raise APIException("Details of multiple HRs present with same type")
         return Response(jnf.data)
 
 class JNFList(APIView):

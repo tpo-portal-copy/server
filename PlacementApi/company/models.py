@@ -55,11 +55,13 @@ class JNF(models.Model):
     def __str__(self):
         return self.company.name + " " + self.mode_of_hiring
 
+    class Meta:
+        unique_together = ("company", "session")
 
 class JNF_placement(models.Model):
     def job_desc_directory_path(instance, filename):
         return 'jnf/job_desc/placement/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_placement")
+    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_placement", unique=True)
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
@@ -72,7 +74,7 @@ class JNF_placement(models.Model):
 class JNF_intern(models.Model):
     def job_desc_directory_path(instance, filename):
         return 'jnf/job_desc/intern/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_intern")
+    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_intern", unique=True)
     has_ppo = models.BooleanField()
     duration = models.IntegerField() #in months
     tentative_start = models.DateField()

@@ -13,9 +13,6 @@ class CompanySerializer(serializers.ModelSerializer):
         storage, path = instance.logo.storage, instance.logo.path
         storage.delete(path)
         return super().update(instance, validated_data)
-    # Field Level Serializer
-    def validate_file_size():
-        pass
 
 
 class HRSerializer(serializers.ModelSerializer):
@@ -133,23 +130,17 @@ class JNFSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
     jnf_placement = JNFPlacementSerializer(read_only = True,required = False)
     jnf_intern = JNFInternSerializer(read_only = True,required = False)
-    # hr = HRSerializer(many = True)
+    hr = serializers.SerializerMethodField()
+    def get_hr(self,item):
+        # print(type(item))
+        # print(item.company)
+        HR_s = HR_details.objects.filter(company__name=item.company)
+        return HRSerializer(HR_s, many=True).data
     class Meta:
         model = JNF
         fields = '__all__'
 
     def create(self, validated_data):
-        HRs = validated_data.pop("hr")
-
-        new_hr = []
-        for hr in HRs:
-            temp_hr = HRSerializer(data = {"company":hr['company'], "type":hr['type'],"name":hr["name"],"mobile":hr['mobile'],"email":hr["email"]})
-            if(temp_hr.is_valid()):
-                n_hr = temp_hr.save()
-                new_hr.append(n_hr)
-            else:
-                raise serializers.ValidationError("HR_Details in invalid format")
-
         jnf = JNF(**validated_data)
         jnf.save()
 
