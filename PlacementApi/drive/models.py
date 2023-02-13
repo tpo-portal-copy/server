@@ -8,7 +8,7 @@ from django.core.validators import RegexValidator, FileExtensionValidator
 class Role(models.Model):
     name = models.CharField(max_length=50)
     def __str__(self) -> str:
-        return self.role
+        return self.name
 
 
 class JobRoles(models.Model):

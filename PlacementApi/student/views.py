@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response 
 from rest_framework.views import APIView
+from rest_framework import generics
 from .models import *
 from .serializers import *
 from rest_framework import status
@@ -21,6 +22,11 @@ class RouteList(APIView):
                   'student/detailintern/<str:pk>':"this will give data of specific student not sitting also used for create , update and delete"}
 
         return Response(routes)
+
+class PPOList(generics.ListCreateAPIView):
+    queryset = PPO.objects.all() 
+    serializer_class = PPOSerializer
+           
 
 class StudentList(APIView):
     pagination_class = CustomPagination

@@ -5,9 +5,9 @@ from drive.models import JobRoles, Role
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, FileExtensionValidator
 from validators import Validate_file_size
-# Create your models here.
-
 from drive.models import Drive
+from django.utils import timezone
+
 
 class Country(models.Model):
     name = models.CharField(default="",max_length=100)
@@ -51,6 +51,11 @@ gender_types = [
     ('m','Male'),
     ('f','Female')
 ]
+# custom model manager for excluding banned student
+class StudentManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(banned_date__lte=timezone.now(), over_date__gte=timezone.now()) 
+
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
@@ -86,7 +91,15 @@ class Student(models.Model):
     total_backlog = models.SmallIntegerField()
     jee_mains_rank = models.IntegerField(null= True) 
     linkedin = models.CharField(default="",max_length=200)
+    pwd = models.BooleanField(default=False)
+    disability_type = models.CharField(max_length=50,choices=[('NONE','None'),('HEARING_IMPAIRMENT', 'Hearing Impairment'),('VISUAL_IMPAIRMENT', 'Visual Impairment'),('MOBILITY_IMPAIRMENT', 'Mobility Impairment'),('SPEECH_IMPAIRMENT', 'Speech Impairment'),('COGNITIVE_IMPAIRMENT', 'Cognitive Impairment'),('OTHER', 'Other')])
+    gap_12_ug = models.IntegerField(default=0)
+    gap_ug_pg = models.IntegerField(default=0)
+    banned_date = models.DateTimeField(default=timezone.datetime(2023,1,1,12,0,0))
+    over_date = models.DateTimeField(default=timezone.datetime(2023,1,1,12,0,0))
 
+    banned = StudentManager()
+    objects = models.Manager()
     def __str__(self) -> str:
         return self.roll.username
 
@@ -124,7 +137,7 @@ class ClusterChosen(models.Model):
     cluster_2 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_2")
     cluster_3 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_3")
     def __str__(self):
-        return self.student.student.first_name + " " + self.student.student.last_name
+        return self.student.student.roll.username
 
 
 
@@ -139,10 +152,14 @@ class Recruited(models.Model):
 # This Table is only for oncampus placed students and PPO both
 class Placed(Recruited):
     student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.student.student.roll.username
 
 
 class Interned(Recruited):
     student = models.ForeignKey(StudentIntern,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.student.student.roll.username   
 
 
 
@@ -160,7 +177,7 @@ class PPO(BaseClass):
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
 
 # For Offcampus placements
-class Offcampus(models.Model):
+class Offcampus(BaseClass):
     # Add the company in Company Table if it does not exist in case of Offcampus placements
     profile = models.ForeignKey(Role, on_delete=models.CASCADE)
     

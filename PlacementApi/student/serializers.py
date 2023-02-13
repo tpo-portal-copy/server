@@ -4,6 +4,12 @@ from django.contrib.auth.models import User
 from course.models import *
 from django.db.models import Q
 
+
+class PPOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PPO
+        fields = '__all__'
+
 class UserSerializer(serializers.Serializer):
     username = serializers.CharField()
 
@@ -36,11 +42,13 @@ class StudentSerializer(serializers.ModelSerializer):
     course = CourseSerializer()
     branch = BranchSerializer()
     city = CitySerializer()
+    isBanned = serializers.SerializerMethodField()
     # student_placement = StudentPlacementSerializer(read_only = True,required = False)
     # student_intern = StudentInternSerializer(read_only = True,required = False)
-   
-    # personal_email = serializers.EmailField(write_only = True)
 
+    def get_isBanned(self,item):
+       return (item.banned_date < timezone.now() and item.over_date > timezone.now())
+    
     class Meta:
         model = Student
         fields = '__all__'
@@ -61,7 +69,9 @@ class StudentSerializer(serializers.ModelSerializer):
 
         user = User.objects.get(username = user_data)
         course = Course.objects.get(name = course_data)
-        branch = Specialization.objects.get(Q( branch_name = branch_data) & Q(course = course))
+        print(course)
+        branch = Specialization.objects.get(Q(branch_name = branch_data) & Q(course = course))
+        print(branch)
         city = City.objects.get(name = city_data)
 
 
