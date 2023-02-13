@@ -12,12 +12,12 @@ class DriveSerializer(serializers.ModelSerializer):
         model = Drive
         fields = '__all__'
         # exclude = ['job_desc']
-     
+
     def create(self,validated_data):
         name = validated_data["company"]
         eligible_batches = validated_data.pop("eligible_batches")
         # print(eligible_batches)
-        validated_data["job_desc"] = name.name+validated_data["name"]
+        # validated_data["job_desc"] = name.name+validated_data["name"]
 
         drive = Drive(**validated_data)
         drive.save()
