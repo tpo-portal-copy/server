@@ -3,7 +3,7 @@ from course.models import Course,Specialization
 from company.models import Company
 from drive.models import JobRoles, Role
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator, FileExtensionValidator
+from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
 from validators import Validate_file_size
 from drive.models import Drive
 from django.utils import timezone
@@ -76,7 +76,7 @@ class Student(models.Model):
     current_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{1}$')])  # choices to be extracted from CourseYearAllowed table at frontend
     passing_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
-    cgpi = models.DecimalField(max_digits=4, decimal_places = 2, default=0)
+    cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     gate_score = models.IntegerField(blank=True, null= True)
     cat_score = models.FloatField(blank=True, null = True)
     class_10_year = models.IntegerField(validators=[RegexValidator(regex=r'\d{4}$')])
@@ -98,8 +98,8 @@ class Student(models.Model):
     banned_date = models.DateTimeField(default=timezone.datetime(2023,1,1,12,0,0))
     over_date = models.DateTimeField(default=timezone.datetime(2023,1,1,12,0,0))
 
-    banned = StudentManager()
     objects = models.Manager()
+    banned = StudentManager()
     def __str__(self) -> str:
         return self.roll.username
 

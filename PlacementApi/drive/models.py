@@ -2,7 +2,7 @@ from django.db import models
 from company.models import Company
 from course.models import Specialization
 from validators import Validate_file_size
-from django.core.validators import RegexValidator, FileExtensionValidator
+from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
 # Create your models here.
 
 class Role(models.Model):
@@ -14,8 +14,10 @@ class Role(models.Model):
 class JobRoles(models.Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     ctc = models.FloatField()
-    cgpi = models.FloatField()
+    cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
+    def __str__(self) -> str:
+        return str(self.id) + " " + self.role.name
 
 
 jtype = [
