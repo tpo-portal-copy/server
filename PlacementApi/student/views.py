@@ -6,10 +6,11 @@ from .models import *
 from .serializers import *
 from rest_framework import status
 from course.models import CourseYearAllowed
-from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter
+from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter
 from .pagination import CustomPagination
-
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.db.models import Max
 class RouteList(APIView):
     def get(self,request):
         routes = {'student/' : "to get list of students basic info",
@@ -24,41 +25,21 @@ class RouteList(APIView):
         return Response(routes)
 
 class PPOList(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication]
     queryset = PPO.objects.all() 
     serializer_class = PPOSerializer
            
 
 class StudentList(APIView):
     pagination_class = CustomPagination
+    filter_class = StudentFilter
     
     def get(self,request):
         queryset = Student.objects.select_related('roll').all()
-
-        check_batch_year = request.query_params.get('batch_year')
-        check_branch = request.query_params.get('branch')
-        check_course = request.query_params.get('course')
-        check_roll = request.query_params.get('student')
-        check_cgpi = request.query_params.get('cgpi')
-
-        if check_batch_year:
-            queryset = queryset.filter(batch_year = check_batch_year)
-
-        if check_branch:
-            queryset = queryset.filter(branch__branch_name = check_branch)
-
-        if check_course:
-            queryset = queryset.filter(course__name = check_course)
-
-        if check_roll:
-            queryset = queryset.filter(roll__username  = check_roll)
-
-        if check_cgpi:
-            queryset = queryset.filter(cgpi__gte = check_cgpi)
-        
+        queryset = self.filter_class(request.query_params,queryset).qs
         queryset = queryset.order_by('cgpi')
         paginator = self.pagination_class()
         queryset = paginator.paginate_queryset(queryset,request)
-        print(type(queryset))
         serialized_data = StudentSerializer(queryset,many = True)
         return paginator.get_paginated_response(serialized_data.data)
 
@@ -79,7 +60,7 @@ class StudentDetail(APIView):
         return Response(serialized_data.data)
 
     def put(self,request,pk):
-        student = Student.objects.get(pk = pk)
+        student = Student.objects.get(roll__username = pk)
         update_student = StudentSerializer(instance=student,data = request.data)
         if update_student.is_valid():
             update_student.save()
@@ -87,24 +68,30 @@ class StudentDetail(APIView):
         return Response(update_student.errors,status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self,request,pk):
-        student = Student.objects.get(pk = pk)
+        student = Student.objects.get(roll__username = pk)
+        print(student)
         student.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class StudentPlacementList(APIView):
+    pagination_class = CustomPagination
     filter_class = StudentPlacementFilter
     def get(self,request):
         queryset = StudentPlacement.objects.select_related('student').all()
         queryset = queryset.prefetch_related('cluster').all()
 
         queryset = self.filter_class(request.query_params,queryset).qs
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
         serialized_data = StudentPlacementSerializer(queryset,many = True)
-        return Response(serialized_data.data)
+        return paginator.get_paginated_response(serialized_data.data)
+        # serialized_data = StudentPlacementSerializer(queryset,many = True)
+        # return Response(serialized_data.data)
 
     def post(self,request):
         new_student_placement = StudentPlacementSerializer(data = request.data)
         if new_student_placement.is_valid():
-            new_student_placement.save()   #owner = request.user 
+            new_student_placement.save()   
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_placement.errors,status=status.HTTP_400_BAD_REQUEST)
 
@@ -132,17 +119,21 @@ class StudentPlacementDetail(APIView):
 
 class StudentInternList(APIView):
     filter_class = StudentInternFilter
+    pagination_class = CustomPagination
     def get(self,request):
-        # queryset = StudentIntern.objects.all()
         queryset = StudentIntern.objects.select_related('student')
         queryset = self.filter_class(request.query_params,queryset).qs
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
         serialized_data = StudentInternSerializer(queryset,many = True)
-        return Response(serialized_data.data)
+        return paginator.get_paginated_response(serialized_data.data)
+        # serialized_data = StudentInternSerializer(queryset,many = True)
+        # return Response(serialized_data.data)
 
     def post(self,request):
         new_student_intern = StudentInternSerializer(data = request.data)
         if new_student_intern.is_valid():
-            new_student_intern.save()  #owner = request.user   
+            new_student_intern.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_intern.errors,status=status.HTTP_400_BAD_REQUEST)
 
@@ -172,12 +163,14 @@ class StudentInternDetail(APIView):
 
 class StudentNotSittingList(APIView):
     filter_class = StudentNSFilter
+    pagination_class = CustomPagination
     def get(self,request):
-        # queryset = StudentNotSitting.objects.all()
         queryset = StudentNotSitting.objects.select_related('student')
         queryset = self.filter_class(request.query_params,queryset).qs
-        serialized_data = StudentNotSittingSerializer(queryset,many = True)
-        return Response(serialized_data.data)
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
+        serialized_data = StudentInternSerializer(queryset,many = True)
+        return paginator.get_paginated_response(serialized_data.data)
 
     def post(self,request):
         new_student_ns = StudentNotSittingSerializer(data = request.data)
@@ -222,6 +215,82 @@ class StudentNotSittingDetail(APIView):
 #         return Response(seriallized.data)
 
 
+
+class BasicStats(APIView):
+    pagination_class = CustomPagination
+    def get(self,request):
+        session = request.query_params["session"]
+        jtype = request.query_params["type"]
+        passingYear = "20" + session[5:]
+        
+        result = {}
+
+        if jtype == "intern":
+            queryset = Interned.objects.filter(student__student__passing_year = passingYear).annotate(max_ctc = Max('job_role__ctc'))
+            offers = Interned.objects.filter(student__student__passing_year = passingYear).count()
+            totalAppeared = StudentIntern.objects.filter(student__passing_year = passingYear).count()
+            serializer = InternedSerializer(queryset,many = True)
+            result["offers"] = offers
+            result["totalAppeared"] = totalAppeared
+            result["companies"] = serializer.data
+
+        else:
+            queryset = Placed.objects.filter(student__student__passing_year = passingYear).annotate(max_ctc = Max('job_role__ctc'))
+            offers = Placed.objects.filter(student__student__passing_year = passingYear).count()
+            totalAppeared = StudentPlacement.objects.filter(student__passing_year = passingYear).count() 
+            serializer = PlacedSerializer(queryset,many = True)
+            result["offers"] = offers
+            result["totalAppeared"] = totalAppeared
+            result["companies"] = serializer.data
+        
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
+        return paginator.get_paginated_response(result)
+
+
+# class CommonQueries(APIView):
+#     def get(self,request):
+#         session = request.query_params["session"]
+#         jtype = request.query_params["type"]
+#         order = request.query_params["order"]
+#         passingYear = "20" + session[5:]
+#         result = {}
+
+#         if jtype == "intern":
+#             queryset = Interned.objects.filter(student__passing_year = passingYear).order_by(-order)
+#             serializer = InternedSerializer(queryset,many = True)
+#             result["offers"] = offers
+#             result["totalAppeared"] = totalAppeared
+#             result["companies"] = serializer.data
+
+#         else:
+#             queryset = Placed.objects.filter(student__student__passing_year = passingYear).order_by(-order)
+#             offers = Placed.objects.filter(student__student__passing_year = passingYear).count()
+#             totalAppeared = StudentPlacement.objects.filter(student__passing_year = passingYear).count() 
+#             serializer = PlacedSerializer(queryset,many = True)
+#             result["offers"] = offers
+#             result["totalAppeared"] = totalAppeared
+#             result["companies"] = serializer.data
+        
+#         paginator = self.pagination_class()
+#         queryset = paginator.paginate_queryset(queryset,request)
+#         return paginator.get_paginated_response(result)
+
+
+
+        
+   
+
+            
+
+        
+
+        
+
+        
+
+        
+            
 
 
 

@@ -11,6 +11,7 @@ urlpatterns = [
     path('detailintern/<str:pk>',StudentInternDetail.as_view(),name=  "detail-intern-student"),
     path('detailnotsitting/',StudentNotSittingList.as_view(),name=  "list-notsitting-student"),
     path('detailnotsitting/<str:pk>',StudentNotSittingDetail.as_view(),name=  "detail-notsitting-student"),
+    path('basicstats/',BasicStats.as_view(),name = "basic-stats-info")
    
     # path('cluster/',clusterchoosen.as_view(),name=  "detail-intern-student"),
 

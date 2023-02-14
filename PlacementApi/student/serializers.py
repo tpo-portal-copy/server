@@ -170,6 +170,19 @@ class StudentNotSittingSerializer(serializers.ModelSerializer):
 
 
 
+class PlacedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Placed
+        fields = '__all__'
+
+class InternedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interned
+        fields = '__all__'
+
+
+
+
 
         
 

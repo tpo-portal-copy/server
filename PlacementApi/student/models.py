@@ -68,7 +68,7 @@ class Student(models.Model):
     gender = models.CharField(default="m", choices = gender_types, max_length=1)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,null=True)
     branch = models.ForeignKey(Specialization,on_delete=models.CASCADE)
-    pnumber = models.BigIntegerField(validators=[RegexValidator(regex=r'\d{10}$')])
+    pnumber = models.BigIntegerField(validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
     city = models.ForeignKey(City,on_delete=models.CASCADE)
     pincode = models.BigIntegerField()
     dob = models.DateField(null=True)
