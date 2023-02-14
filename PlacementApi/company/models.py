@@ -1,7 +1,7 @@
 from django.db import models
 from course.models import Specialization
 from validators import Validate_file_size
-from django.core.validators import RegexValidator, FileExtensionValidator
+from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
 from django.dispatch import receiver
 import os
 
@@ -42,7 +42,7 @@ class JNFManager(models.Manager):
         return super().get_queryset().filter(is_approved = True) 
 
 class JNF(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="jnf")
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     is_placement = models.BooleanField()
     is_intern = models.BooleanField()
@@ -58,8 +58,8 @@ class JNF(models.Model):
     # hr = models.ManyToManyField(HR_details, blank=True)
     is_approved = models.BooleanField(default=False)
 
-    approved = JNFManager()
     objects = models.Manager()
+    approved = JNFManager()
     def __str__(self):
         return self.company.name + " " + self.mode_of_hiring
 
@@ -74,7 +74,7 @@ class JNF_placement(models.Model):
     job_profile = models.CharField(max_length=100)
     ctc = models.FloatField() #in LPA
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
-    cgpi = models.FloatField()
+    cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
     def __str__(self) -> str:
         return self.jnf.company.name + " " + self.job_profile
@@ -90,7 +90,7 @@ class JNF_intern(models.Model):
     stipend = models.FloatField() # stipend to be given per month in thousands
     ctc = models.FloatField()  # expected ctc to be given if 
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
-    cgpi = models.FloatField()  # default cgpi puchni h
+    cgpi = models.FloatField(validators=[MaxValueValidator(10)])  # default cgpi puchni h
     eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
     def __str__(self) -> str:
         return self.jnf.company.name + " " + self.job_profile
