@@ -5,12 +5,14 @@ from rest_framework import generics
 from .models import *
 from .serializers import *
 from rest_framework import status
-from course.models import CourseYearAllowed
-from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter
+# from course.models import CourseYearAllowed
+from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter,PPOFilter
 from .pagination import CustomPagination
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Max
+# from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Max,Count
+from django.db.models import F
 class RouteList(APIView):
     def get(self,request):
         routes = {'student/' : "to get list of students basic info",
@@ -25,9 +27,12 @@ class RouteList(APIView):
         return Response(routes)
 
 class PPOList(generics.ListCreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
     queryset = PPO.objects.all() 
     serializer_class = PPOSerializer
+    filterset_class = PPOFilter
+    pagination_class = CustomPagination
+
            
 
 class StudentList(APIView):
@@ -226,55 +231,69 @@ class BasicStats(APIView):
         result = {}
 
         if jtype == "intern":
-            queryset = Interned.objects.filter(student__student__passing_year = passingYear).annotate(max_ctc = Max('job_role__ctc'))
+            queryset = Interned.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(max_stipend = Max('job_role__ctc')).order_by('-job_role__ctc')[:5]
             offers = Interned.objects.filter(student__student__passing_year = passingYear).count()
             totalAppeared = StudentIntern.objects.filter(student__passing_year = passingYear).count()
-            serializer = InternedSerializer(queryset,many = True)
+            serializer = []
+            for company in queryset:
+                serializer.append(company)
             result["offers"] = offers
             result["totalAppeared"] = totalAppeared
-            result["companies"] = serializer.data
+            result["companies"] = serializer
 
         else:
-            queryset = Placed.objects.filter(student__student__passing_year = passingYear).annotate(max_ctc = Max('job_role__ctc'))
+            queryset = Placed.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(max_ctc = Max('job_role__ctc')).order_by('-job_role__ctc')[:5]
             offers = Placed.objects.filter(student__student__passing_year = passingYear).count()
             totalAppeared = StudentPlacement.objects.filter(student__passing_year = passingYear).count() 
-            serializer = PlacedSerializer(queryset,many = True)
+            serializer = []
+            for company in queryset:
+                serializer.append(company)
             result["offers"] = offers
             result["totalAppeared"] = totalAppeared
-            result["companies"] = serializer.data
+            result["companies"] = queryset
         
         paginator = self.pagination_class()
         queryset = paginator.paginate_queryset(queryset,request)
         return paginator.get_paginated_response(result)
 
 
-# class CommonQueries(APIView):
-#     def get(self,request):
-#         session = request.query_params["session"]
-#         jtype = request.query_params["type"]
-#         order = request.query_params["order"]
-#         passingYear = "20" + session[5:]
-#         result = {}
+class CommonQueries(APIView):
+    pagination_class = CustomPagination
+    def get(self,request):
+        session = request.query_params["session"]
+        jtype = request.query_params["type"]
+        order = request.query_params["order"]
+        passingYear = "20" + session[5:]
+        result = {}
+        if order == "ctc":
+            queryset = list()
+            if jtype == "intern":
+                queryset = list(Interned.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(max_stipend = Max('job_role__ctc')).order_by('-job_role__ctc'))
 
-#         if jtype == "intern":
-#             queryset = Interned.objects.filter(student__passing_year = passingYear).order_by(-order)
-#             serializer = InternedSerializer(queryset,many = True)
-#             result["offers"] = offers
-#             result["totalAppeared"] = totalAppeared
-#             result["companies"] = serializer.data
-
-#         else:
-#             queryset = Placed.objects.filter(student__student__passing_year = passingYear).order_by(-order)
-#             offers = Placed.objects.filter(student__student__passing_year = passingYear).count()
-#             totalAppeared = StudentPlacement.objects.filter(student__passing_year = passingYear).count() 
-#             serializer = PlacedSerializer(queryset,many = True)
-#             result["offers"] = offers
-#             result["totalAppeared"] = totalAppeared
-#             result["companies"] = serializer.data
+            else:
+                queryset =list(Placed.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(max_ctc = Max('job_role__ctc')).order_by('-job_role__ctc'))
+            
+            serializer = []
+            print(queryset)
+            for company in queryset:
+                serializer.append(company)
+            result["companies"] = serializer
+        else:
+            queryset = list()
+            if jtype == "intern":
+                queryset = list(Interned.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(offers = Count('student')).order_by('-offers'))
+            else:
+                queryset = list(Placed.objects.filter(student__student__passing_year = passingYear).values(name = F('drive__company__name')).annotate(offers = Count('student')).order_by('-offers'))
+            
+            serializer = []
+            for company in queryset:
+                serializer.append(company)
+            result["companies"] = serializer
         
-#         paginator = self.pagination_class()
-#         queryset = paginator.paginate_queryset(queryset,request)
-#         return paginator.get_paginated_response(result)
+        paginator = self.pagination_class()
+        queryset = paginator.paginate_queryset(queryset,request)
+        return paginator.get_paginated_response(result) 
+            
 
 
 

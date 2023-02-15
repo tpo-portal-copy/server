@@ -6,6 +6,9 @@ from django.db.models import Q
 
 
 class PPOSerializer(serializers.ModelSerializer):
+    company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
+    student = serializers.CharField(source = 'student.roll.username')
+
     class Meta:
         model = PPO
         fields = '__all__'

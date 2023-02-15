@@ -11,15 +11,6 @@ class Role(models.Model):
         return self.name
 
 
-class JobRoles(models.Model):
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    ctc = models.FloatField()
-    cgpi = models.FloatField(validators=[MaxValueValidator(10)])
-    eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
-    def __str__(self) -> str:
-        return str(self.id) + " " + self.role.name
-
-
 jtype = [
     ('intern','Internship'),
     ('placement','Placement'),
@@ -27,7 +18,7 @@ jtype = [
 ]
 class Drive(models.Model):
     def job_desc_directory_path(instance, filename):
-        return 'drive/job_desc/{0}/{1}/{2}.pdf'.format(instance.session,instance.job_type,instance.jnf.company.name)
+        return 'drive/job_desc/{0}/{1}/{2}.pdf'.format(instance.session,instance.job_type,instance.company.name)
     company = models.ForeignKey(Company,on_delete=models.CASCADE)
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     mode_of_hiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site')], max_length=20)
@@ -39,7 +30,7 @@ class Drive(models.Model):
     no_of_persons_visiting = models.IntegerField(default=0) # 0 if drive is virtual
     job_location = models.CharField(max_length=100) # Separate different job locations with any delimeter
     starting_date = models.DateField()
-    job_roles = models.ManyToManyField(JobRoles)
+    # job_roles = models.ManyToManyField(JobRoles) => it one to many relation so there should be foreignkey in jobrole table
     ctc = models.FloatField(default=0) # Store ctc of the expected ppo offer
     # drive type based on company type for e.g. IT, Mech Core, EE Core, etc..
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
@@ -49,5 +40,15 @@ class Drive(models.Model):
         unique_together = ('company','job_type','session')
 
     def __str__(self) -> str:
-        return self.company.name + " " + self.session
+        return self.company.name + " " + self.session + " " +self.job_type
+
+
+class JobRoles(models.Model):
+    drive = models.ForeignKey(Drive,on_delete=models.CASCADE,related_name="job_roles")
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    ctc = models.FloatField()
+    cgpi = models.FloatField(validators=[MaxValueValidator(10)])
+    eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
+    def __str__(self) -> str:
+        return str(self.drive.__str__()) + " " + self.role.name
 

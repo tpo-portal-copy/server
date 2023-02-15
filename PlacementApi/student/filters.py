@@ -1,6 +1,17 @@
 import django_filters
-from .models import Student,StudentPlacement,StudentNotSitting,StudentIntern
+from .models import Student,StudentPlacement,StudentNotSitting,StudentIntern,PPO
 from django.db.models import Q
+
+# class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
+#     pass
+class PPOFilter(django_filters.FilterSet):
+    # company = CharInFilter(field_name='company__name',lookup_expr='in')
+    company = django_filters.CharFilter(field_name='company__name',lookup_expr='iexact')
+    student = django_filters.CharFilter(field_name='student__roll__username',lookup_expr='iexact')
+
+    class Meta:
+        model = PPO
+        fields = ['session','company','student']
 
 class StudentFilter(django_filters.FilterSet):
     student = django_filters.CharFilter(field_name='roll__username',lookup_expr='iexact')

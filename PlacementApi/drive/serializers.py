@@ -12,9 +12,11 @@ from django.core.files import File
 class JobRolesSerializer(serializers.ModelSerializer):
     role = serializers.SlugRelatedField(queryset=Role.objects.all(), slug_field="name")
     eligible_batches = SpecialisationSerializer(many= True)
+    drive = serializers.PrimaryKeyRelatedField(queryset = Drive.objects.all(),write_only = True)
     class Meta:
         model = JobRoles
         fields = '__all__'
+       
 
     def create(self, validated_data):
         eligible_batches = validated_data.pop("eligible_batches")
@@ -29,7 +31,7 @@ class JobRolesSerializer(serializers.ModelSerializer):
 
 class DriveSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset =Company.objects.all(),slug_field="name")
-    job_roles = JobRolesSerializer(many = True)
+    job_roles = JobRolesSerializer(read_only = True,many = True)
 
     class Meta:
         model = Drive
@@ -49,22 +51,14 @@ class DriveSerializer(serializers.ModelSerializer):
             try:
                 jnf = JNF_placement.objects.get(jnf__company__name = validated_data["company"])
             except:
-                raise serializers.ValidationError("Corresponding placement details not found")
-        validated_data["job_desc_pdf"] = jnf.job_desc_pdf
+                pass
+                # raise serializers.ValidationError("Corresponding placement details not found")
+        # validated_data["job_desc_pdf"] = jnf.job_desc_pdf
 
-        job_roles = validated_data.pop("job_roles")
+       
 
         drive = Drive(**validated_data)
         drive.save()
-
-        for job_role in job_roles:
-            new_role = JobRolesSerializer(data={"role":job_role["role"],"ctc":job_role["ctc"], "cgpi":float(job_role["cgpi"]),"eligible_batches":job_role['eligible_batches']})
-            if(new_role.is_valid()):
-                instance = new_role.save()
-                drive.job_roles.add(instance)
-            else:
-                print(new_role.errors)
-                print("Invalid Data for Job Role")
         return drive
 
     def update(self, instance, validated_data):
