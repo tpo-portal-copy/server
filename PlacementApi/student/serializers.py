@@ -6,6 +6,9 @@ from django.db.models import Q
 
 
 class PPOSerializer(serializers.ModelSerializer):
+    company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
+    student = serializers.CharField(source = 'student.roll.username')
+
     class Meta:
         model = PPO
         fields = '__all__'
@@ -166,6 +169,19 @@ class StudentNotSittingSerializer(serializers.ModelSerializer):
         not_sitting_student = StudentNotSitting(student = student_id,**validated_data)
         not_sitting_student.save()
         return not_sitting_student
+
+
+
+
+class PlacedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Placed
+        fields = '__all__'
+
+class InternedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interned
+        fields = '__all__'
 
 
 
