@@ -14,7 +14,7 @@ class Role(models.Model):
 jtype = [
     ('intern','Internship'),
     ('placement','Placement'),
-    ('intern and ppo', 'Internship + Placement')
+    ('intern and ppo', 'Internship+Placement')
 ]
 class Drive(models.Model):
     def job_desc_directory_path(instance, filename):

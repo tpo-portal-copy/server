@@ -10,30 +10,20 @@ from django_filters import rest_framework as filters
 from student.pagination import CustomPagination
 # Create your views here.
 
-# def roll_filling(request):
-#     if request.method == 'GET':
-#         data = pd.read_csv("roles.txt",header=None,names = ['role'])
-#         # print(data)
-#         for index, row in data.iterrows():
-#             new_role = Role(role = row["role"])
-#             new_role.save()
-#         return HttpResponse("hii")
-
-class RolesList(APIView):
-    # queryset = Role.objects.all()
-    # serializer_class = RoleSerializer
-    def get(self,request):
-        roles = Role.objects.values_list('role',flat = True)
-        print(roles)
-        roles = {"roles":list(roles)}
-        return Response(roles)
-
 class ExperienceList(generics.ListCreateAPIView):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ExperienceFilter
     pagination_class = CustomPagination
+
+    # def post(self,request):
+    #     print(request.data)
+    #     se = ExperienceSerializer(data = request.data)
+    #     if se.is_valid():
+    #         pass
+    #     else:
+    #         print(se.errors)
 
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):

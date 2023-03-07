@@ -21,8 +21,11 @@ class StudentListingField(serializers.RelatedField):
 class ExperienceSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
     # student = serializers.SlugRelatedField(queryset = Student.objects.all(),slug_field='roll')
+    # company = serializers.PrimaryKeyRelatedField(queryset = Company.objects.all()) for flooding exp
     student = StudentListingField(queryset = Student.objects.all())
-    roles = serializers.SlugRelatedField(queryset = Role.objects.all(),slug_field='role')
+    roles = serializers.SlugRelatedField(queryset = Role.objects.all(),slug_field='name')
+    # roles = serializers.PrimaryKeyRelatedField(queryset = Role.objects.all())
+
     
 
 
@@ -31,6 +34,7 @@ class ExperienceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self,validated_data):
+        print(validated_data)
         experience = Experience(**validated_data)
         experience.save()
         return experience

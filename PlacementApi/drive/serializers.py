@@ -12,6 +12,7 @@ from django.core.files import File
 class JobRolesSerializer(serializers.ModelSerializer):
     role = serializers.SlugRelatedField(queryset=Role.objects.all(), slug_field="name")
     eligible_batches = SpecialisationSerializer(many= True)
+    # eligible_batches = serializers.PrimaryKeyRelatedField(queryset = Specialization.objects.all(),many = True)
     drive = serializers.PrimaryKeyRelatedField(queryset = Drive.objects.all(),write_only = True)
     class Meta:
         model = JobRoles
@@ -19,15 +20,31 @@ class JobRolesSerializer(serializers.ModelSerializer):
        
 
     def create(self, validated_data):
+        print(validated_data)
         eligible_batches = validated_data.pop("eligible_batches")
-
         job_role = JobRoles(**validated_data)
         job_role.save()
-
         for batches in eligible_batches:
-            specialization = Specialization.objects.get(course = batches['course'],branch_name = batches["branch_name"])
+            specialization = Specialization.objects.get(branch_name = batches["branch"],course = batches["course"])
             job_role.eligible_batches.add(specialization)
         return job_role
+    
+    def update(self, instance, validated_data):
+        instance.drive = validated_data.get('drive',instance.drive)
+        instance.role =  validated_data.get('role',instance.role)
+        instance.ctc = validated_data.get('ctc',instance.ctc)
+        instance.cgpi = validated_data.get('cgpi',instance.cgpi)
+        branches = []
+        for branch in validated_data["eligible_batches"]:
+            print(branch)
+            specialization = Specialization.objects.get(branch_name = branch["branch_name"],course = branch["course"])
+            print(specialization)
+            branches.append(specialization)
+        instance.eligible_batches.set(branches)
+        instance.save()
+        return instance
+
+    
 
 class DriveSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset =Company.objects.all(),slug_field="name")
@@ -38,35 +55,36 @@ class DriveSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_job_desc_pdf(self, value):
-        print(value)
+        # print(value)
         return value
     def create(self,validated_data):
+        # print(validated_data)
         jnf = None
         if validated_data["job_type"] == "intern" or validated_data["job_type"] == "intern and ppo":
             try:
-                jnf = JNF_intern.objects.get(jnf__company__name = validated_data["company"])
+                jnf = JNF_intern.objects.get(jnf__company = validated_data["company"])
             except:
-                raise serializers.ValidationError("Corresponding intern details not found")
+                print("yes")
+                # raise serializers.ValidationError("Corresponding intern details not found")
         elif validated_data["job_type"] == "placement":
             try:
-                jnf = JNF_placement.objects.get(jnf__company__name = validated_data["company"])
+                jnf = JNF_placement.objects.get(jnf__company = validated_data["company"])
             except:
+                print("No")
                 pass
                 # raise serializers.ValidationError("Corresponding placement details not found")
         # validated_data["job_desc_pdf"] = jnf.job_desc_pdf
 
        
-
         drive = Drive(**validated_data)
         drive.save()
         return drive
 
     def update(self, instance, validated_data):
         name = validated_data["company"]
-        # validated_data["job_desc"] = name.name+validated_data["name"]
 
         instance.company = validated_data.get('company',instance.company)
-        instance.ctc_offered = validated_data.get('ctc_offered',instance.ctc_offered)
+        instance.ctc = validated_data.get('ctc_offered',instance.ctc)
         instance.mode_of_hiring = validated_data.get('mode_of_hiring',instance.mode_of_hiring)
         instance.pre_placement_talk = validated_data.get('pre_placement_talk',instance.pre_placement_talk)
         instance.aptitude_test = validated_data.get('aptitude_test',instance.aptitude_test)
@@ -79,20 +97,5 @@ class DriveSerializer(serializers.ModelSerializer):
         instance.job_type = validated_data.get('job_type',instance.job_type)
         instance.ctc = validated_data.get('ctc',instance.ctc)
         instance.session = validated_data.get('session',instance.session)
-        job_roles = validated_data.get('job_roles')
-        
-        new_job_roles = []
-        for job_role in job_roles:
-            new_role = JobRolesSerializer(data={"role":job_role["role"],"ctc":job_role["ctc"], "cgpi":float(job_role["cgpi"]),"eligible_batches":job_role['eligible_batches']})
-            if(new_role.is_valid()):
-                instance = new_role.save()
-                new_job_roles.append(instance)
-            else:
-                print(new_role.errors)
-                print("Invalid Data for Job Role")
-
-
-        instance.job_roles.set(new_job_roles)
-
         instance.save()
         return instance

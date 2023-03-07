@@ -3,16 +3,17 @@ from course.models import Specialization
 from validators import Validate_file_size
 from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
 from django.dispatch import receiver
+
 import os
 
 # Create your models here.
 class Company(models.Model):
     def company_directory_path(instance, filename):
         print(instance.logo)
-        return 'company_logos/{0}.jpg'.format(instance.name)
+        return 'company_logos/{0}.png'.format(instance.name)
 
     name = models.CharField(max_length=100, unique=True)
-    logo = models.ImageField(upload_to= company_directory_path, null = True, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']),Validate_file_size(10,"MB")])
+    logo = models.ImageField(upload_to= company_directory_path, null = True, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png','svg']),Validate_file_size(10,"MB")])
     # type (IT or Core)
     def __str__(self) -> str:
         return self.name

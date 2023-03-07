@@ -27,3 +27,4 @@ urlpatterns = [
     path('companies/',include('company.urls')),
     path('drives/',include('drive.urls')),
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+
