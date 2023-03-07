@@ -9,8 +9,8 @@ diff_choices = [
     ('H' , 'Hard')
 ]
 jtype = [
-    ('intern','Internship'),
-    ('placement','Placement'),
+    ('Internship','Internship'),
+    ('Placement','Placement'),
 ]
 
 # c_type_choices = [
@@ -31,7 +31,7 @@ class Experience(models.Model):
     student = models.ForeignKey(Student,on_delete=models.CASCADE)
     description = models.TextField()
     no_of_rounds = models.PositiveIntegerField()
-    profile = models.ForeignKey(Role,on_delete=models.CASCADE)
+    roles = models.ForeignKey(Role,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     selected = models.BooleanField(default=False)

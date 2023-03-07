@@ -2,8 +2,18 @@ from django.contrib import admin
 from .models import Drive,Role,JobRoles
 
 # Register your models here.
-admin.site.register(Drive)
-admin.site.register(Role)
-admin.site.register(JobRoles)
+@admin.register(Drive)
+class DriveAdmin(admin.ModelAdmin):
+    search_fields = ('company__name',)
+# admin.site.register(Role)
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    # list_display = ('id',)
+    search_fields = ('name',)
+# admin.site.register(JobRoles)
+@admin.register(JobRoles)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('id',)
+    # search_fields = ('name',)
 
 # admin.site.register(Branchallowed)
