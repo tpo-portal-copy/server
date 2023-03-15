@@ -4,11 +4,14 @@ from drive.models import Role
 
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
     pass
+class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
+    pass
 class ExperienceFilter(django_filters.FilterSet):
     # company = django_filters.CharFilter(field_name='company__name',lookup_expr='iexact')
     company = CharInFilter(field_name='company__name',lookup_expr='in')
-    roles = CharInFilter(field_name='roles__role',lookup_expr='in')
-    year = django_filters.NumberFilter(field_name='datetime',lookup_expr='year__iexact')
+    roles = CharInFilter(field_name='roles__name',lookup_expr='in')
+    year = NumberInFilter(field_name='updated_at',lookup_expr='year__in')
+    difficulty = CharInFilter(field_name='difficulty',lookup_expr='in')
 
 
     class Meta:

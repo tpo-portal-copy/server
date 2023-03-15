@@ -1,6 +1,6 @@
 from django.db import models
 from company.models import Company
-from course.models import Specialization
+from course.models import Cluster,Specialization
 from validators import Validate_file_size
 from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
 # Create your models here.
@@ -30,6 +30,9 @@ class Drive(models.Model):
     no_of_persons_visiting = models.IntegerField(default=0) # 0 if drive is virtual
     job_location = models.CharField(max_length=100) # Separate different job locations with any delimeter
     starting_date = models.DateField()
+    # closed_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     # job_roles = models.ManyToManyField(JobRoles) => it one to many relation so there should be foreignkey in jobrole table
     ctc = models.FloatField(default=0) # Store ctc of the expected ppo offer
     # drive type based on company type for e.g. IT, Mech Core, EE Core, etc..
@@ -49,6 +52,13 @@ class JobRoles(models.Model):
     ctc = models.FloatField()
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
+
+    @property
+    def cluster(self):
+        cluster = Cluster.objects.get(starting__lt = self.ctc,ending__gte = self.ctc)
+        return cluster.Cluster_id
+
+
     def __str__(self) -> str:
         return str(self.drive.__str__()) + " " + self.role.name
 

@@ -29,7 +29,7 @@ class HR_details(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     type = models.CharField(default = 'primary', choices = [('primary','Primary'), ('secondary','Secondary')],max_length=10)
     name = models.CharField(max_length=50)
-    mobile = models.BigIntegerField(validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
+    mobile = models.CharField(max_length=13, validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
     email = models.EmailField()
     def __str__(self) -> str:
         return f"{self.company.name} {self.type} {self.name}"

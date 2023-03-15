@@ -6,7 +6,7 @@ from .serializers import CompanySerializer, HRSerializer, JNFSerializer, JNFPlac
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
-from rest_framework import generics
+from rest_framework import generics,filters
 from student.pagination import CustomPagination
 
 class CompanyDetailAPIView(generics.RetrieveUpdateAPIView):
@@ -17,7 +17,10 @@ class CompanyDetailAPIView(generics.RetrieveUpdateAPIView):
 class CompanyListAPIView(generics.ListCreateAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    pagination_class = CustomPagination
+    # pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ('name',)
+
 
 class HRCreateAPIView(generics.CreateAPIView):
     serializer_class = HRSerializer

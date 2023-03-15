@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .filters import *
 from django_filters import rest_framework as filters
 from student.pagination import CustomPagination
+
 # Create your views here.
 
 class ExperienceList(generics.ListCreateAPIView):
@@ -28,7 +29,13 @@ class ExperienceList(generics.ListCreateAPIView):
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Experience.objects.all()
-    serializer_class = ExperienceSerializer
+    serializer_class = ExperienceDetailSerializer
+
+
+
+
+
+
     
 
 

@@ -14,12 +14,14 @@ class StudentAdmin(admin.ModelAdmin):
     
 # admin.site.register(StudentIntern)
 @admin.register(StudentIntern)
-class StudentPlacementAdmin(admin.ModelAdmin):
-    list_display = ['id']
+class StudentInternAdmin(admin.ModelAdmin):
+    search_fields = ["student__roll__username"]
+
+    # list_display = ['id']
 # admin.site.register(StudentPlacement)
 @admin.register(StudentPlacement)
 class StudentPlacementAdmin(admin.ModelAdmin):
-    list_display = ['id']
+    search_fields = ["student__roll__username"]
 
 admin.site.register(StudentNotSitting)
 admin.site.register(ClusterChosen)
