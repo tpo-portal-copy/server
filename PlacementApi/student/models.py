@@ -1,9 +1,9 @@
 from django.db import models
-from course.models import Course,Specialization
+from course.models import Cluster,Course,Specialization
 from company.models import Company
 from drive.models import JobRoles, Role
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
+from django.core.validators import RegexValidator, FileExtensionValidator ,MinValueValidator,MaxValueValidator
 from validators import Validate_file_size
 from drive.models import Drive
 from django.utils import timezone
@@ -33,13 +33,13 @@ class City(models.Model):
 #     def __str__(self) -> str:
 #         return self.name
 
-class Cluster(models.Model):
-    Cluster_id = models.IntegerField(primary_key=True)
-    starting = models.FloatField(default=0)
-    ending = models.FloatField(default=0)
+# class Cluster(models.Model):
+#     Cluster_id = models.IntegerField(primary_key=True)
+#     starting = models.FloatField(default=0)
+#     ending = models.FloatField(default=0)
 
-    def __str__(self) -> str:
-        return str(self.Cluster_id) 
+#     def __str__(self) -> str:
+#         return str(self.Cluster_id) 
 
 # to be filled manually and denotes category like OBC, Gen, Gen-EWS , etc..
 class Category(models.Model):
@@ -59,7 +59,7 @@ class StudentManager(models.Manager):
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
-    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user",null = True)
+    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user")
     image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']), Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
@@ -68,7 +68,7 @@ class Student(models.Model):
     gender = models.CharField(default="m", choices = gender_types, max_length=1)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,null=True)
     branch = models.ForeignKey(Specialization,on_delete=models.CASCADE)
-    pnumber = models.BigIntegerField(validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
+    pnumber = models.CharField(max_length=13, validators=[RegexValidator(regex=r'^(\+91)?[6-9]\d{9}$')])
     city = models.ForeignKey(City,on_delete=models.CASCADE)
     pincode = models.BigIntegerField()
     dob = models.DateField(null=True)
@@ -87,16 +87,18 @@ class Student(models.Model):
     class_12_school = models.CharField(default="",max_length=200)
     class_12_board = models.CharField(default="",max_length=200)
     class_12_perc = models.FloatField()
+    class_12_domicile = models.ForeignKey(State, on_delete=models.CASCADE)
     active_backlog = models.SmallIntegerField()
     total_backlog = models.SmallIntegerField()
     jee_mains_rank = models.IntegerField(null= True) 
     linkedin = models.CharField(default="",max_length=200)
     pwd = models.BooleanField(default=False)
     disability_type = models.CharField(max_length=50,choices=[('NONE','None'),('HEARING_IMPAIRMENT', 'Hearing Impairment'),('VISUAL_IMPAIRMENT', 'Visual Impairment'),('MOBILITY_IMPAIRMENT', 'Mobility Impairment'),('SPEECH_IMPAIRMENT', 'Speech Impairment'),('COGNITIVE_IMPAIRMENT', 'Cognitive Impairment'),('OTHER', 'Other')])
+    disability_percentage = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     gap_12_ug = models.IntegerField(default=0)
     gap_ug_pg = models.IntegerField(default=0)
-    banned_date = models.DateTimeField(default=timezone.now())
-    over_date = models.DateTimeField(default=timezone.now())
+    banned_date = models.DateTimeField(default=timezone.now)
+    over_date = models.DateTimeField(default=timezone.now)
 
     objects = models.Manager()
     banned = StudentManager()
@@ -142,7 +144,7 @@ class ClusterChosen(models.Model):
 
 
 class Recruited(models.Model):
-    drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
+    # drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
     job_role = models.ForeignKey(JobRoles, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -169,16 +171,17 @@ class BaseClass(models.Model):
     ctc = models.FloatField() # in LPA
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
+    profile = models.ForeignKey(Role, on_delete=models.CASCADE)
     class Meta:
         abstract = True
 
 
 class PPO(BaseClass):
-    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
-
+    pass
 # For Offcampus placements
 class Offcampus(BaseClass):
     # Add the company in Company Table if it does not exist in case of Offcampus placements
-    profile = models.ForeignKey(Role, on_delete=models.CASCADE)
-    
+    type = models.CharField(max_length=20, choices= [('internship','Internship'),('placement','Placement')])
+    pass
 

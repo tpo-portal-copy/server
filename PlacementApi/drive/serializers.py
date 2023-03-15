@@ -1,23 +1,32 @@
 from rest_framework import serializers
 from .models import Role,JobRoles,Drive
 from company.models import JNF_placement,JNF_intern,Company,JNF
-from course.models import Specialization
+from course.models import Specialization,Cluster
 from course.serializers import SpecialisationSerializer
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from pathlib import Path
-from django.core.files import File
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = '__all__'
 
 class JobRolesSerializer(serializers.ModelSerializer):
     role = serializers.SlugRelatedField(queryset=Role.objects.all(), slug_field="name")
     eligible_batches = SpecialisationSerializer(many= True)
     # eligible_batches = serializers.PrimaryKeyRelatedField(queryset = Specialization.objects.all(),many = True)
     drive = serializers.PrimaryKeyRelatedField(queryset = Drive.objects.all(),write_only = True)
+    cluster = serializers.SerializerMethodField()
     class Meta:
         model = JobRoles
         fields = '__all__'
-       
+
+    def get_cluster(self,obj):
+        cluster = Cluster.objects.get(starting__lt = obj.ctc,ending__gte = obj.ctc)
+        return cluster.Cluster_id
+
+
+
 
     def create(self, validated_data):
         print(validated_data)
@@ -49,10 +58,15 @@ class JobRolesSerializer(serializers.ModelSerializer):
 class DriveSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset =Company.objects.all(),slug_field="name")
     job_roles = JobRolesSerializer(read_only = True,many = True)
-
+    image_url = serializers.SerializerMethodField()
     class Meta:
         model = Drive
         fields = '__all__'
+    def get_image_url(self,obj):
+        # print(obj.company.logo)
+        return "https://sakhanithnith.pagekite.me/media/" + str(obj.company.logo)
+        # return obj.company.logo
+    
 
     def validate_job_desc_pdf(self, value):
         # print(value)

@@ -1,12 +1,16 @@
 from django.db import models
 from student.models import Student
+from drive.models import Drive
 from django.utils import timezone
-
+from django.core.validators import RegexValidator
 
 # Create your models here.
 class TPO(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
+
+    def __str__(self) -> str:
+        return self.name + " " + self.email
 
 
 class TPR(models.Model):
@@ -14,13 +18,27 @@ class TPR(models.Model):
 
 
 class Announcement(models.Model):
-    # company = models.ForeignKey(Company,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=500)
-    type = models.CharField(max_length=100)
+    # type = models.CharField(max_length=100)
     description = models.TextField()
-    time = models.DateTimeField(auto_now=True)
-    tpo = models.ForeignKey(TPO, on_delete=models.CASCADE, null=True)
-    tpr = models.ForeignKey(TPR, on_delete=models.CASCADE, null=True)
+    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
+    # time = models.DateTimeField(auto_now=True)
+    tpo = models.ForeignKey(TPO, on_delete=models.CASCADE, blank=True, null=True)
+    tpr = models.ForeignKey(TPR, on_delete=models.CASCADE, blank=True,null=True)
+    class Meta:
+        abstract = True
+
+class GeneralAnnouncement(Announcement):
+    type = models.CharField(max_length=30, choices = [('general','General'), ('results','Results')])
+    def __str__(self) -> str:
+        return self.title
+
+class CompanyAnnouncement(Announcement):
+    drive = models.ForeignKey(Drive, on_delete=models.CASCADE)
+    def __str__(self) -> str:
+        return self.title
 
 branch_choices = [
     ('cse','Computer Science and Engineering'),

@@ -1,6 +1,13 @@
 from django.db import models
 
 # Create your models here.
+class Cluster(models.Model):
+    Cluster_id = models.IntegerField(primary_key=True)
+    starting = models.FloatField(default=0)
+    ending = models.FloatField(default=0)
+
+    def __str__(self) -> str:
+        return str(self.Cluster_id) 
 
 class Course(models.Model):
     name = models.CharField(max_length=20, null = True)

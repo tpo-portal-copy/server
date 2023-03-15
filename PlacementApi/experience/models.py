@@ -2,6 +2,8 @@ from django.db import models
 from company.models import Company
 from student.models import Student
 from drive.models import Role
+# from django_quill.fields import QuillField
+
 # Create your models here.
 diff_choices = [
     ('E' ,'Easy'),

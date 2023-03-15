@@ -4,7 +4,7 @@ from .models import Company,HR_details,JNF,JNF_intern,JNF_placement
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    # list_display = ('id',)
+    list_display = ('id',)
     search_fields = ('name',)
 admin.site.register(JNF)
 admin.site.register(JNF_intern)

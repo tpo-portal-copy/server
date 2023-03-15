@@ -4,6 +4,7 @@ from .models import Drive,Role,JobRoles
 # Register your models here.
 @admin.register(Drive)
 class DriveAdmin(admin.ModelAdmin):
+    list_display = ('id',)
     search_fields = ('company__name',)
 # admin.site.register(Role)
 @admin.register(Role)
@@ -12,8 +13,8 @@ class RoleAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 # admin.site.register(JobRoles)
 @admin.register(JobRoles)
-class RoleAdmin(admin.ModelAdmin):
-    list_display = ('id',)
-    # search_fields = ('name',)
+class JobRolesAdmin(admin.ModelAdmin):
+    # search_fields = ('',)
+    pass
 
 # admin.site.register(Branchallowed)

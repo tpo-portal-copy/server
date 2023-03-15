@@ -66,28 +66,16 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        # print(validated_data)
-        user_data = validated_data["roll"]
-
-        validated_data.pop('roll')
+        # validated_data.pop('roll')
         course = validated_data["course"]
-        validated_data.pop('course')
         branch_data = validated_data["branchWrite"]
-    
-
         validated_data.pop('branchWrite')
-    
         city_data = validated_data["cityWrite"]
-
         validated_data.pop('cityWrite')
         state = validated_data.pop('state')
-
-        user = User.objects.get(username = user_data)
         branch = Specialization.objects.get(Q(branch_name = branch_data) & Q(course = course))
         city = City.objects.get(Q(name = city_data)& Q(state__name = state))
-
-
-        student = Student(roll = user,course = course,branch = branch,city = city,**validated_data)
+        student = Student(branch = branch,city = city,**validated_data)
         student.save()
         return student
 
@@ -135,7 +123,6 @@ class StudentPlacementSerializer(serializers.ModelSerializer):
         resume = validated_data.get("resume")
         undertaking = validated_data.get("undertaking")
         roll = validated_data.pop('roll')
-
         student = Student.objects.get(roll__username = roll)
 
         student_placement = StudentPlacement(student = student,resume = resume,undertaking = undertaking)
@@ -180,14 +167,24 @@ class StudentNotSittingSerializer(serializers.ModelSerializer):
         return not_sitting_student
 
 
-
+class Check(serializers.RelatedField):
+    def to_representation(self, value):
+        print(value)
+        return value.student.course.name + value.student.branch.branch_name+str(value.student.passing_year)
+class Check_rol(serializers.RelatedField):
+    def to_representation(self, value):
+        return value.drive.session
 
 class PlacedSerializer(serializers.ModelSerializer):
+    student =  Check(read_only = True)
+    job_role = Check_rol(read_only = True)
     class Meta:
         model = Placed
         fields = '__all__'
 
 class InternedSerializer(serializers.ModelSerializer):
+    student =  Check(read_only = True)
+    job_role = Check_rol(read_only = True)
     class Meta:
         model = Interned
         fields = '__all__'
