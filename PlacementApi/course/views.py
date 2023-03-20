@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import generics, status
+from rest_framework import generics, status,views
 from .models import Course, Specialization, CourseYearAllowed
 from .serializers import CourseSerializer, SpecialisationSerializer, CourseYearAllowedSerializer
 from rest_framework.response import Response
@@ -12,6 +12,12 @@ class CourseAPIView(generics.ListCreateAPIView):
 class SpecializationAPIView(generics.ListCreateAPIView):
     queryset = Specialization.objects.all()
     serializer_class = SpecialisationSerializer
+
+class SpecilizationDetailAPIView(views.APIView):
+    def get(self,request,id):
+        branches = Specialization.objects.filter(course = id).values('id','branch_name')
+        return Response({"branches":branches})
+
 
 class CourseYearAllowedAPIView(generics.ListCreateAPIView):
     queryset = CourseYearAllowed.objects.all()

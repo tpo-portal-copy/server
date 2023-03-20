@@ -11,6 +11,7 @@ admin.site.register(Category)
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['id']
+    search_fields = ["roll__username"]
     
 # admin.site.register(StudentIntern)
 @admin.register(StudentIntern)
@@ -25,7 +26,12 @@ class StudentPlacementAdmin(admin.ModelAdmin):
 
 admin.site.register(StudentNotSitting)
 admin.site.register(ClusterChosen)
-admin.site.register(Placed)
-admin.site.register(Interned)
+@admin.register(Placed)
+class StudentPlacedAdmin(admin.ModelAdmin):
+    search_fields = ["job_role__drive__session"]
+
+@admin.register(Interned)
+class StudentInternedAdmin(admin.ModelAdmin):
+    search_fields = ["student__student__course__name"]
 admin.site.register(Offcampus)
 admin.site.register(PPO)

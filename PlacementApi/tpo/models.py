@@ -51,9 +51,10 @@ branch_choices = [
     ('mnc','Mathematics and Computing'),
     ('eph','Engineering Physics'),
     ('archi','Architecture Engineering'),
-    ('master','MBA'),
+    ('mba','MBA'),
     ('sciences','Master in Sciences')
 ]
+
 
 class Resources(models.Model):
     type = models.CharField(max_length=20, choices=[('management','Management'),('sciences','Sciences'),('tech','Technical')])

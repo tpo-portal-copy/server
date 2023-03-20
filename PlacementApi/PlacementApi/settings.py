@@ -169,5 +169,14 @@ SIMPLE_JWT = {
     'LEEWAY': 0,
 
     'AUTH_HEADER_TYPES': ('Bearer',),
+    # "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.MyTokenObtainPairSerializer",
     }
 
+
+
+################################# Mail Configuration
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = '195106@nith.ac.in'
+EMAIL_HOST_PASSWORD = os.environ.get("MAIL_PASSWORD")

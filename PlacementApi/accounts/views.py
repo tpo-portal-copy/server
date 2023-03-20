@@ -5,6 +5,22 @@ from .serializers import UserSerializer, RegisterSerializer
 from rest_framework import permissions
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 # from rest_framework_simplejwt.views import jwt_views
+from django.http import HttpResponse  
+from PlacementApi import settings  
+from django.core.mail import send_mail  
+  
+  
+def mail(request):  
+    subject = "Greetings"  
+    msg     = "Congratulations for your success"  
+    to      = "193069@nith.ac.in"  
+    res     = send_mail(subject, msg, settings.EMAIL_HOST_USER, [to])  
+    if(res == 1):  
+        msg = "Mail Sent Successfuly"  
+    else:  
+        msg = "Mail could not sent"  
+    return HttpResponse(msg)  
+
 # Register API
 class RegisterAPI(generics.GenericAPIView):
     serializer_class = RegisterSerializer

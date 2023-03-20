@@ -11,6 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email')
 
 
+
 # Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True,validators=[UniqueValidator(queryset=User.objects.all())])
@@ -32,3 +33,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
         user.save()
         return user
+
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+#     @classmethod
+#     def get_token(cls, user):
+#         token = super().get_token(user)
+
+#         token['roll'] = user.username
+
+#         return token

@@ -24,7 +24,7 @@ class City(models.Model):
     name = models.CharField(default="",max_length=100)
     state = models.ForeignKey(State,on_delete=models.CASCADE)
     def __str__(self) -> str:
-        return self.name + " " + self.state.name
+        return self.name
 
 
 # class School(models.Model):
@@ -49,7 +49,8 @@ class Category(models.Model):
 
 gender_types = [
     ('m','Male'),
-    ('f','Female')
+    ('f','Female'),
+    ('o','Others')
 ]
 # custom model manager for excluding banned student
 class StudentManager(models.Manager):
@@ -99,6 +100,7 @@ class Student(models.Model):
     gap_ug_pg = models.IntegerField(default=0)
     banned_date = models.DateTimeField(default=timezone.now)
     over_date = models.DateTimeField(default=timezone.now)
+    
 
     objects = models.Manager()
     banned = StudentManager()
@@ -182,6 +184,6 @@ class PPO(BaseClass):
 # For Offcampus placements
 class Offcampus(BaseClass):
     # Add the company in Company Table if it does not exist in case of Offcampus placements
-    type = models.CharField(max_length=20, choices= [('internship','Internship'),('placement','Placement')])
+    type = models.CharField(max_length=20, choices= [('intern','Internship'),('placement','Placement')])
     pass
 
