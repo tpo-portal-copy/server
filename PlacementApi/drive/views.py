@@ -60,9 +60,10 @@ class RolesList(generics.ListCreateAPIView):
 
 
 
+
 class DriveList(generics.ListCreateAPIView):
     # queryset = Drive.objects.select_related('company')
-    queryset = Drive.objects.prefetch_related('job_roles').order_by('id')
+    queryset = Drive.objects.filter(session='2022-23').order_by('-created_at')
     serializer_class = DriveSerializer
     # filter_backends = (filters.DjangoFilterBackend)
     pagination_class = CustomPagination
@@ -92,20 +93,26 @@ class DriveList(generics.ListCreateAPIView):
             raise APIException("Invalid Data for Drive")
 
 class DriveDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Drive.objects.select_related('company')
+    queryset = Drive.objects.all()
     serializer_class = DriveSerializer
     def put(self, request,pk):
         drive = Drive.objects.get(id = pk)
         serializer = DriveSerializer(instance=drive,data = request.data)
         if serializer.is_valid():
             serializer.save()
-        jobRoles = request.data["job_roles"][0]
+        # jobRoles = request.data["job_roles"][0]
+        # print(request.data)
+        jobRoles = request.data["job_roles"]
+        # print(jobRoles)
         jobRoles["drive"] = drive.id
         job_roles = JobRoles.objects.get(id = jobRoles["id"])
         serializerRole = JobRolesSerializer(instance=job_roles,data = jobRoles)
         if serializerRole.is_valid():
+            print("valid_data")
             serializerRole.save()
             return Response(serializer.data)
-        
+        else:
+            print(serializerRole.errors)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     

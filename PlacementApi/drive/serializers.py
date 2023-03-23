@@ -13,17 +13,19 @@ class RoleSerializer(serializers.ModelSerializer):
 
 class JobRolesSerializer(serializers.ModelSerializer):
     role = serializers.SlugRelatedField(queryset=Role.objects.all(), slug_field="name")
+    # role = serializers.PrimaryKeyRelatedField(queryset = Role.objects.all())
     eligible_batches = SpecialisationSerializer(many= True)
     # eligible_batches = serializers.PrimaryKeyRelatedField(queryset = Specialization.objects.all(),many = True)
     drive = serializers.PrimaryKeyRelatedField(queryset = Drive.objects.all(),write_only = True)
-    cluster = serializers.SerializerMethodField()
+    cluster = serializers.SlugRelatedField(queryset=Cluster.objects.all(),slug_field='cluster_id')
+    # cluster_check = serializers.SerializerMethodField()
     class Meta:
         model = JobRoles
         fields = '__all__'
 
-    def get_cluster(self,obj):
-        cluster = Cluster.objects.get(starting__lt = obj.ctc,ending__gte = obj.ctc)
-        return cluster.Cluster_id
+    # def get_cluster_check(self,obj):
+    #     cluster = Cluster.objects.get(starting__lt = obj.ctc,ending__gte = obj.ctc)
+    #     return (cluster==obj.cluster)
 
 
 
@@ -39,6 +41,7 @@ class JobRolesSerializer(serializers.ModelSerializer):
         return job_role
     
     def update(self, instance, validated_data):
+        print(validated_data)
         instance.drive = validated_data.get('drive',instance.drive)
         instance.role =  validated_data.get('role',instance.role)
         instance.ctc = validated_data.get('ctc',instance.ctc)
@@ -49,28 +52,27 @@ class JobRolesSerializer(serializers.ModelSerializer):
             specialization = Specialization.objects.get(branch_name = branch["branch_name"],course = branch["course"])
             print(specialization)
             branches.append(specialization)
+        # instance.eligible_batches.set(validated_data["eligible_batches"])
         instance.eligible_batches.set(branches)
+
         instance.save()
         return instance
 
     
-
+from company.serializers import CompanySerializer
 class DriveSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset =Company.objects.all(),slug_field="name")
     job_roles = JobRolesSerializer(read_only = True,many = True)
-    image_url = serializers.SerializerMethodField()
+    image_url = serializers.ImageField(source = 'company.logo')
+    
     class Meta:
         model = Drive
         fields = '__all__'
-    def get_image_url(self,obj):
-        # print(obj.company.logo)
-        return "https://sakhanithnith.pagekite.me/media/" + str(obj.company.logo)
-        # return obj.company.logo
-    
 
     def validate_job_desc_pdf(self, value):
         # print(value)
         return value
+    
     def create(self,validated_data):
         # print(validated_data)
         jnf = None

@@ -8,11 +8,12 @@ from rest_framework.response import Response
 from .filters import *
 from django_filters import rest_framework as filters
 from student.pagination import CustomPagination
-
+# from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 class ExperienceList(generics.ListCreateAPIView):
-    queryset = Experience.objects.all()
+    # permission_classes = [IsAuthenticated] 
+    queryset = Experience.objects.all().order_by('-created_at')
     serializer_class = ExperienceSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ExperienceFilter

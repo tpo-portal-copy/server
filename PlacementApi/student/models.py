@@ -24,7 +24,7 @@ class City(models.Model):
     name = models.CharField(default="",max_length=100)
     state = models.ForeignKey(State,on_delete=models.CASCADE)
     def __str__(self) -> str:
-        return self.name + " " + self.state.name
+        return self.name
 
 
 # class School(models.Model):
@@ -49,7 +49,8 @@ class Category(models.Model):
 
 gender_types = [
     ('m','Male'),
-    ('f','Female')
+    ('f','Female'),
+    ('o','Others')
 ]
 # custom model manager for excluding banned student
 class StudentManager(models.Manager):
@@ -59,7 +60,7 @@ class StudentManager(models.Manager):
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
-    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user")
+    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="student")
     image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']), Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
@@ -99,6 +100,7 @@ class Student(models.Model):
     gap_ug_pg = models.IntegerField(default=0)
     banned_date = models.DateTimeField(default=timezone.now)
     over_date = models.DateTimeField(default=timezone.now)
+    
 
     objects = models.Manager()
     banned = StudentManager()
@@ -127,7 +129,7 @@ reasons = [
     ('other', "Others")
 ]
 class StudentNotSitting(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='student_ns')
     reason = models.CharField(max_length=40, choices=reasons)
     def __str__(self) -> str:
         return self.student.roll.username
@@ -182,6 +184,6 @@ class PPO(BaseClass):
 # For Offcampus placements
 class Offcampus(BaseClass):
     # Add the company in Company Table if it does not exist in case of Offcampus placements
-    type = models.CharField(max_length=20, choices= [('internship','Internship'),('placement','Placement')])
+    type = models.CharField(max_length=20, choices= [('intern','Internship'),('placement','Placement')])
     pass
 

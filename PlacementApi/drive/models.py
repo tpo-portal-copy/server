@@ -52,11 +52,7 @@ class JobRoles(models.Model):
     ctc = models.FloatField()
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
-
-    @property
-    def cluster(self):
-        cluster = Cluster.objects.get(starting__lt = self.ctc,ending__gte = self.ctc)
-        return cluster.Cluster_id
+    cluster = models.ForeignKey(Cluster,on_delete=models.CASCADE,null=True)
 
 
     def __str__(self) -> str:
