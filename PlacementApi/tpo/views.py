@@ -11,7 +11,7 @@ from django.db.models.functions import Concat
 
 
 # Create your views here.
-class AnnouncementAPIView(generics.ListAPIView):
+class AnnouncementAPIView(generics.ListCreateAPIView):
     serializer_class_General = GeneralAnnouncementSerializer
     serializer_class_Company = CompanyAnnouncementSerializer
     queryset = CompanyAnnouncement.objects.all()
@@ -20,6 +20,28 @@ class AnnouncementAPIView(generics.ListAPIView):
         return GeneralAnnouncement.objects.all()
     def get_queryset_Company(self):
         return CompanyAnnouncement.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        print(request.data)
+        request_type = request.data["type"]
+        print(request_type)
+
+        serializer = None
+        if request_type == "general" or request_type == "results":
+            serializer = self.serializer_class_General(data=request.data)
+            pass
+        elif request_type == "company":
+            serializer = self.serializer_class_Company(data=request.data)
+            pass
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        print(serializer)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            print(serializer.errors)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         request_type = request.query_params["type"]

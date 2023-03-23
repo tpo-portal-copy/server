@@ -537,9 +537,9 @@ class CompanyRelatedQueries(APIView):
         else:
             company = request.query_params["company"]
         
-        print(jtype)
-        print(session)
-        print(company)
+        # print(jtype)
+        # print(session)
+        # print(company)
         result = {}
         result['company']=company
         result['totalOffers']=0

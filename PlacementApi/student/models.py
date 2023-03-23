@@ -60,7 +60,7 @@ class StudentManager(models.Manager):
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
         return 'student/{0}/{1}.jpg'.format(instance.batch_year,instance.roll.username)
-    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="user")
+    roll = models.OneToOneField(User,on_delete=models.CASCADE,related_name="student")
     image_url = models.ImageField(upload_to =student_image_directory_path, max_length=255, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png']), Validate_file_size(10,"MB")],null=True)
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100,blank=True,null=True)
@@ -129,7 +129,7 @@ reasons = [
     ('other', "Others")
 ]
 class StudentNotSitting(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='student_ns')
     reason = models.CharField(max_length=40, choices=reasons)
     def __str__(self) -> str:
         return self.student.roll.username

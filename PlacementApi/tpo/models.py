@@ -14,7 +14,7 @@ class TPO(models.Model):
 
 
 class TPR(models.Model):
-    name = models.ForeignKey(Student, on_delete=models.CASCADE)
+    name = models.OneToOneField(Student, on_delete=models.CASCADE)
 
 
 class Announcement(models.Model):
