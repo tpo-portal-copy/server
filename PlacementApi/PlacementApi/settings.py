@@ -68,7 +68,7 @@ ROOT_URLCONF = 'PlacementApi.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,7 +80,7 @@ TEMPLATES = [
         },
     },
 ]
- 
+
 WSGI_APPLICATION = 'PlacementApi.wsgi.application'
 
 # Database
@@ -174,10 +174,11 @@ SIMPLE_JWT = {
 
 
 ################################# Mail Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = '195106@nith.ac.in'
+EMAIL_HOST_USER = os.environ.get("MAIL_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("MAIL_PASSWORD")
 
 

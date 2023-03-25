@@ -11,5 +11,7 @@ urlpatterns = [
      path('api/istpr',views.CheckPermissions.as_view()),
      path('api/otp/verify/',views.OTPVerification.as_view()),
      path('api/otp/resend/',views.OTPResend.as_view()),
-
+     path('api/change-password/', views.ChangePasswordView.as_view(), name='change-password'),
+     path('api/password-reset/',views.RequestPasswordResetEmail.as_view(),name="password-reset"),
+     path('api/password-reset-confirm/<uidb64>/<token>/', views.PasswordTokenCheckAPI.as_view(), name='password-reset-confirm'),
 ]
