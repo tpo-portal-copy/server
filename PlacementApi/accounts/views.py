@@ -1,8 +1,7 @@
 from django.shortcuts import redirect
-from rest_framework import generics, permissions,status
+from rest_framework import generics, permissions,status,views
 from rest_framework.response import Response
 from .serializers import RegisterSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, ChangePasswordSerializer
-from rest_framework import permissions,generics,views
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from django.contrib.sites.shortcuts import get_current_site
 # from rest_framework_simplejwt.views import jwt_views
@@ -20,6 +19,22 @@ import datetime
 import pytz
 import random
 import os
+from rest_framework_simplejwt.tokens import RefreshToken
+
+# Logout View
+
+class LogoutView(views.APIView):
+    # permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 # Register API
 class RegisterAPI(generics.GenericAPIView):
@@ -92,8 +107,18 @@ class OTPResend(views.APIView):
 
 
 class CheckPermissions(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated,TPRPermissions]
+    # permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [TPRPermissions()]
+        else:
+            return []
+   
     def get(self,request):
+        # self.permission_classes = [TPRPermissions]
         return Response("HII I AM TPR AND YOU HAVE TO LISTEN TO ME !!!",status=status.HTTP_200_OK)
 
 

@@ -3,6 +3,7 @@ from company.models import Company
 from course.models import Cluster,Specialization
 from validators import Validate_file_size
 from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
+from tpr.models import TPR
 # Create your models here.
 
 class Role(models.Model):
@@ -10,11 +11,10 @@ class Role(models.Model):
     def __str__(self) -> str:
         return self.name
 
-
 jtype = [
     ('intern','Internship'),
     ('placement','Placement'),
-    ('intern and ppo', 'Internship+Placement')
+    ('intern and fte', 'Internship+Placement')
 ]
 class Drive(models.Model):
     def job_desc_directory_path(instance, filename):
@@ -38,6 +38,8 @@ class Drive(models.Model):
     # drive type based on company type for e.g. IT, Mech Core, EE Core, etc..
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     job_type = models.CharField(max_length=15, choices=jtype)
+    tpr = models.ForeignKey(TPR,on_delete=models.CASCADE,null=True)
+    closed_date = models.DateTimeField(null=True)
 
     class Meta:
         unique_together = ('company','job_type','session')
@@ -52,9 +54,8 @@ class JobRoles(models.Model):
     ctc = models.FloatField()
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
-    cluster = models.ForeignKey(Cluster,on_delete=models.CASCADE,null=True)
+    cluster = models.ForeignKey(Cluster,on_delete=models.CASCADE)
 
 
     def __str__(self) -> str:
         return str(self.drive.__str__()) + " " + self.role.name
-

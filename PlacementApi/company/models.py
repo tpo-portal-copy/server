@@ -2,9 +2,6 @@ from django.db import models
 from course.models import Specialization
 from validators import Validate_file_size
 from django.core.validators import RegexValidator, FileExtensionValidator, MaxValueValidator
-from django.dispatch import receiver
-
-import os
 
 # Create your models here.
 class Company(models.Model):
@@ -67,25 +64,36 @@ class JNF(models.Model):
     class Meta:
         unique_together = ("company", "session")
 
-class JNF_placement(models.Model):
+
+class JNF_placement_base(models.Model):
     def job_desc_directory_path(instance, filename):
         return 'jnf/job_desc/placement/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_placement", unique=True)
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
-    ctc = models.FloatField() #in LPA
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])
     eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
-    def __str__(self) -> str:
-        return self.jnf.company.name + " " + self.job_profile
+    class Meta:
+        abstract = True
+        unique_together = ['jnf','job_profile']
+
+class JNF_placement(JNF_placement_base):
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_placement")
+    has_intern = models.BooleanField(default=False)
+    ctc = models.FloatField() #in LPA
+class JNF_intern_fte(JNF_placement_base):
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_intern_fte")
+    ctc_after_intern = models.FloatField() #in LPA
+    stipend = models.FloatField() #in thousands
+    duration = models.PositiveIntegerField(default=6)
+
 
 class JNF_intern(models.Model):
     def job_desc_directory_path(instance, filename):
         return 'jnf/job_desc/intern/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    jnf = models.OneToOneField(JNF, on_delete=models.CASCADE, related_name="jnf_intern", unique=True)
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_intern")
     has_ppo = models.BooleanField()
-    duration = models.IntegerField() #in months
+    duration = models.IntegerField(choices=[(1,"One Month"), (2, "Two Months")]) #in months
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
     stipend = models.FloatField() # stipend to be given per month in thousands
@@ -93,36 +101,8 @@ class JNF_intern(models.Model):
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])  # default cgpi puchni h
     eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
+
+    class Meta:
+        unique_together = ['jnf','job_profile']
     def __str__(self) -> str:
         return self.jnf.company.name + " " + self.job_profile
-
-
-@receiver(models.signals.post_delete, sender=JNF_placement)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """
-    Deletes file from filesystem
-    when corresponding `JNF_placement` object is deleted.
-    """
-    if instance.job_desc_pdf:
-        if os.path.isfile(instance.job_desc_pdf.path):
-            os.remove(instance.job_desc_pdf.path)
-
-@receiver(models.signals.pre_save, sender=JNF_placement)
-def auto_delete_file_on_change(sender, instance, **kwargs):
-    """
-    Deletes old file from filesystem
-    when corresponding `JNF_placement` object is updated
-    with new file.
-    """
-    if not instance.pk:
-        return False
-
-    try:
-        old_file = JNF_placement.objects.get(pk=instance.pk).job_desc_pdf
-    except JNF_placement.DoesNotExist:
-        return False
-
-    new_file = instance.job_desc_pdf
-    if not old_file == new_file:
-        if os.path.isfile(old_file.path):
-            os.remove(old_file.path)

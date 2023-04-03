@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import *
+from . import views
 urlpatterns = [
-    path('',ExperienceList.as_view(),name = "experience-list"),
-    path('<int:pk>',ExperienceDetail.as_view(),name = "experience-detail"),
+    path('',views.ExperienceList.as_view(),name = "experience-list"),
+    path('<int:pk>',views.ExperienceDetail.as_view(),name = "experience-detail"),
+    path('my-experiences',views.StudentExperience.as_view(),name = "student-experiences"),
 
 ]

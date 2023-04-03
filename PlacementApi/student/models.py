@@ -5,7 +5,6 @@ from drive.models import JobRoles, Role
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, FileExtensionValidator ,MinValueValidator,MaxValueValidator
 from validators import Validate_file_size
-from drive.models import Drive
 from django.utils import timezone
 
 
@@ -25,21 +24,6 @@ class City(models.Model):
     state = models.ForeignKey(State,on_delete=models.CASCADE)
     def __str__(self) -> str:
         return self.name
-
-
-# class School(models.Model):
-#     name = models.CharField(default="",max_length=200)
-#     board = models.CharField(default="",max_length=200)
-#     def __str__(self) -> str:
-#         return self.name
-
-# class Cluster(models.Model):
-#     Cluster_id = models.IntegerField(primary_key=True)
-#     starting = models.FloatField(default=0)
-#     ending = models.FloatField(default=0)
-
-#     def __str__(self) -> str:
-#         return str(self.Cluster_id) 
 
 # to be filled manually and denotes category like OBC, Gen, Gen-EWS , etc..
 class Category(models.Model):
@@ -106,6 +90,7 @@ class Student(models.Model):
     banned = StudentManager()
     def __str__(self) -> str:
         return self.roll.username
+
 
 class StudentPlacement(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE,related_name='student_placement')
