@@ -32,3 +32,5 @@ class CourseYearAllowed(models.Model):
 
     class Meta:
         unique_together = ["course","year"]
+    def __str__(self) -> str:
+        return self.course.name + str(self.year) + self.type_allowed

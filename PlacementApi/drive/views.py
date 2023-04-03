@@ -1,17 +1,17 @@
-from django.shortcuts import render,HttpResponse
 from rest_framework import generics,status
-# from rest_framework.response import Response
 from django_filters import rest_framework
-from rest_framework import filters
-
-from course.models import Specialization
+from rest_framework import filters,permissions
+from rest_framework.decorators import permission_classes
+from accounts import permissions as custom_permissions
+from course.models import CourseYearAllowed
 from .models import Drive, Role ,JobRoles
-from company.models import JNF_intern
 from .serializers import DriveSerializer,JobRolesSerializer,RoleSerializer
 from student.pagination import CustomPagination
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from .filters import DriveFilters
+from django.utils import timezone
+from django.db.models import Q
 # Create your views here.
 # from rest_framework.views import APIView
 
@@ -19,6 +19,7 @@ class RolesList(generics.ListCreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     filter_backends = [filters.SearchFilter]
+    permission_classes = [permissions.IsAuthenticated]
     search_fields = ['name']
     # def get(self,request):
     #     roles = Role.objects.values_list('name',flat = True)
@@ -63,13 +64,40 @@ class RolesList(generics.ListCreateAPIView):
 
 class DriveList(generics.ListCreateAPIView):
     # queryset = Drive.objects.select_related('company')
-    queryset = Drive.objects.filter(session='2022-23').order_by('-created_at')
     serializer_class = DriveSerializer
-    # filter_backends = (filters.DjangoFilterBackend)
     pagination_class = CustomPagination
     filter_backends = (rest_framework.DjangoFilterBackend,)
     filterset_class = DriveFilters
+    # permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        session = None
+        curr_date = timezone.now()
+        date = timezone.datetime(curr_date.year, 7, 1, tzinfo=timezone.get_current_timezone())
+        date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+        if curr_date <= date:
+            session = str(curr_date.year-1) + "-"+str(curr_date.year)[2:]
+        else:
+            session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
+        type = CourseYearAllowed.objects.get(course = self.request.user.student.course,year = self.request.user.student.current_year).type_allowed
+        if type == "placement":
+            queryset = Drive.objects.filter(Q(session=session),Q(job_type = type) | Q(job_type = 'intern and fte')).order_by('-created_at')  
+        elif type == "intern":
+            queryset = Drive.objects.filter(session=session,job_type = type).order_by('-created_at')  
+        else:
+            queryset = None
 
+        return queryset
+    
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated(),custom_permissions.PlacementSession()]
+        elif self.request.method == 'POST':
+            return [permissions.IsAuthenticated(),custom_permissions.TPRPermissions()]
+        else:
+            return []
+
+    # @permission_classes([permissions.IsAuthenticated,custom_permissions.TPRPermissions])
     def post(self, request, *args, **kwargs):
         print(request.data)
         if "other" in request.data:    
@@ -92,8 +120,10 @@ class DriveList(generics.ListCreateAPIView):
             print(driveserializer.errors)
             raise APIException("Invalid Data for Drive")
 
+
 class DriveDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Drive.objects.all()
+    permission_classes = [permissions.IsAuthenticated,custom_permissions.TPRPermissions] 
     serializer_class = DriveSerializer
     def put(self, request,pk):
         drive = Drive.objects.get(id = pk)

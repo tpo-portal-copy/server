@@ -112,16 +112,10 @@ class StudentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(validated_data)
-        # validated_data.pop('roll')
-        # course = validated_data["course"]
         branch = validated_data["branch_write"]
         validated_data.pop('branch_write')
-        # validated_data.pop('branch_write')
         city = validated_data["city_write"]
         validated_data.pop('city_write')
-        # state = validated_data.pop('state')
-        # branch = Specialization.objects.get(Q(branch_name = branch_data)
-        # city = City.objects.get(Q(name = city_data)& Q(state__name = state))
         student = Student(branch=branch,city = city,**validated_data)
         student.save()
         return student
@@ -194,6 +188,7 @@ class StudentInternSerializer(serializers.ModelSerializer):
         fields = ['student','resume','roll']
 
     def create(self,validated_data):
+        print(validated_data)
         roll = validated_data.pop("roll")
         validated_data.pop("student")
         # owner = validated_data.pop("owner")

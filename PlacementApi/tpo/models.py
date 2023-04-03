@@ -1,8 +1,9 @@
 from django.db import models
-from student.models import Student
-from drive.models import Drive
+# from student.models import Student,Company
+from drive.models import Drive,Company
 from django.utils import timezone
 from django.core.validators import RegexValidator
+from tpr.models import TPR
 
 # Create your models here.
 class TPO(models.Model):
@@ -13,8 +14,8 @@ class TPO(models.Model):
         return self.name + " " + self.email
 
 
-class TPR(models.Model):
-    name = models.OneToOneField(Student, on_delete=models.CASCADE)
+# class TPR(models.Model):
+#     name = models.OneToOneField(Student, on_delete=models.CASCADE)
 
 
 class Announcement(models.Model):
@@ -62,3 +63,20 @@ class Resources(models.Model):
     heading = models.CharField(max_length=200)
     content_type = models.CharField(max_length=20, choices=[('article','Articles and Links'), ('faq','FAQs')])
     content = models.TextField()
+
+jtype = [
+    ('intern','Internship'),
+    ('placement','Placement'),
+    ('intern and fte', 'Internship+Placement')
+]
+class DriveApproved(models.Model):
+    approved_date = models.DateTimeField(auto_now_add=True)
+    spocs = models.ManyToManyField(TPR)
+    last_date = models.DateTimeField() # last date to create drive by tpr
+    company = models.ForeignKey(Company,on_delete=models.CASCADE)
+    session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
+    job_type = models.CharField(max_length=15, choices=jtype)
+
+    class Meta:
+        unique_together = ['company','session','job_type']
+ 

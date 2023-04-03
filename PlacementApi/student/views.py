@@ -1,21 +1,21 @@
-from django.shortcuts import render
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from rest_framework import generics
+from drive.models import Drive
 from .models import *
 from .serializers import *
 from rest_framework import status
-# from course.models import CourseYearAllowed
 from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter,PPOFilter
 from .pagination import CustomPagination
 from rest_framework_simplejwt.authentication import JWTAuthentication
-# from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Max,Count,Avg,Min
 from django.db.models import F
 from experience.models import Experience
-from rest_framework import filters
+from rest_framework import filters,permissions
+from accounts import permissions as custom_permissions
 import pandas as pd
+
 class CountryListCreateAPIView(APIView):
     def post(self,request):
         print(request.data["name"])
@@ -59,19 +59,48 @@ class RouteList(APIView):
 
         return Response(routes)
 
+
+# API FOR CHECKING ELIGIBILITY OF STUDENT
+class EligibilityCheck(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self,request,roll):
+        result = {}
+        try:
+            student = Student.objects.get(roll__username = roll)
+            result["eligible"] = CourseYearAllowed.objects.get(course = student.course,year = student.current_year).type_allowed
+            print("true")
+        except Student.DoesNotExist:
+            result["eligible"] = ""
+        return Response(result,status=status.HTTP_200_OK)
+
+
 class PPOList(generics.ListCreateAPIView):
-    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [permissions.IsAuthenticated]
     queryset = PPO.objects.all() 
     serializer_class = PPOSerializer
     filterset_class = PPOFilter
     pagination_class = CustomPagination
+    
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated(),custom_permissions.PlacementSession()]
+        elif self.request.method == 'POST':
+            return [permissions.IsAuthenticated(),custom_permissions.TPRPermissions()]
+        else:
+            return []
 
            
 
 class StudentList(APIView):
     pagination_class = CustomPagination
     filter_class = StudentFilter
-    
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [permissions.IsAuthenticated()]
+        else:
+            return []
     def get(self,request):
         queryset = Student.objects.select_related('roll').all()
         queryset = self.filter_class(request.query_params,queryset).qs
@@ -83,17 +112,18 @@ class StudentList(APIView):
 
     def post(self,request): 
         new_student = StudentSerializer(data = request.data)
+        print(request.data)
         if new_student.is_valid():
             # print("valid data")
             new_student.save()    
-            return Response(new_student.data,status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         else:
             print(request.data)
             print(new_student.errors)
         return Response(new_student.errors,status=status.HTTP_400_BAD_REQUEST)
 
 class StudentDetail(APIView):
-    
+    permission_classes = [permissions.IsAuthenticated]  
     def get(self,request,pk):
         students = Student.objects.get(roll__username=pk)
         serialized_data = StudentSerializer(students)
@@ -116,6 +146,7 @@ class StudentDetail(APIView):
 class StudentPlacementList(APIView):
     pagination_class = CustomPagination
     filter_class = StudentPlacementFilter
+    permission_classes = [permissions.IsAuthenticated]
     def get(self,request):
         queryset = StudentPlacement.objects.select_related('student').all()
         queryset = queryset.prefetch_related('cluster').all()
@@ -139,7 +170,7 @@ class StudentPlacementList(APIView):
         return Response(new_student_placement.errors,status=status.HTTP_400_BAD_REQUEST)
 
 class StudentPlacementDetail(APIView):
-
+    permission_classes = [permissions.IsAuthenticated]
     def get(self,request,pk):
         # roll = Student.objects.get(roll__username = pk)
         student_placement = StudentPlacement.objects.get(student__roll__username = pk )
@@ -163,6 +194,8 @@ class StudentPlacementDetail(APIView):
 class StudentInternList(APIView):
     filter_class = StudentInternFilter
     pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self,request):
         queryset = StudentIntern.objects.select_related('student')
         queryset = self.filter_class(request.query_params,queryset).qs
@@ -183,6 +216,8 @@ class StudentInternList(APIView):
 
 
 class StudentInternDetail(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self,request,pk):
         student_intern = StudentIntern.objects.get(student__roll__username = pk )
         serialized_data = StudentInternSerializer(student_intern)
@@ -202,11 +237,10 @@ class StudentInternDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
-
 class StudentNotSittingList(APIView):
     filter_class = StudentNSFilter
     pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
     def get(self,request):
         queryset = StudentNotSitting.objects.select_related('student')
         queryset = self.filter_class(request.query_params,queryset).qs
@@ -227,6 +261,7 @@ class StudentNotSittingList(APIView):
 
 
 class StudentNotSittingDetail(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self,request,pk):
         student_NS = StudentNotSitting.objects.get(student__roll__username = pk )
         serialized_data = StudentNotSittingSerializer(student_NS)
@@ -249,6 +284,7 @@ class StudentNotSittingDetail(APIView):
 class StudentInterned(generics.ListCreateAPIView):
     queryset = Interned.objects.all()
     serializer_class = InternedSerializer
+    permission_classes = [permissions.IsAuthenticated,custom_permissions.TPRPermissions]
     def post(self, request, *args, **kwargs):
         print(request.data)
         serializer = InternedSerializer(data = request.data)
@@ -264,6 +300,7 @@ class StudentInterned(generics.ListCreateAPIView):
 class StudentPlaced(generics.ListCreateAPIView):
     queryset = Placed.objects.all()
     serializer_class = PlacedSerializer
+    permission_classes = [permissions.IsAuthenticated,custom_permissions.TPRPermissions]
     def post(self, request, *args, **kwargs):
         # print(request.data)
         serializer = PlacedSerializer(data = request.data)
@@ -277,19 +314,6 @@ class StudentPlaced(generics.ListCreateAPIView):
 
 ##################################################################################
 
-# class ProfileData(APIView):
-
-#     def get(self,request):
-
-
-
-
-
-
-
-    
-
-
 # class ClusterChoosen(generics.GenericAPIView):
 #     queryset = ClusterChosen.objects.all()
 #     serializer_class = ClusterChosenSerializer
@@ -297,6 +321,7 @@ class StudentPlaced(generics.ListCreateAPIView):
 
 
 class BasicStats(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self,request):
 
         if request.query_params.get('session') == None or request.query_params["session"] == "":
@@ -329,7 +354,8 @@ class BasicStats(APIView):
             topCompanies = topCompaniesIntern.union(topCompaniesOffCampus).order_by('-max_stipend')[:10]
             companiesVisited = Interned.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name')).distinct().count() 
             print(companiesVisited)
-            course_name = "B.Tech"
+            course_name = request.user.student.course.name
+            print(course_name)
             oncampus_data = Interned.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll = F('student__student'),branch = F('student__student__branch__branch_name'),stipend = F('job_role__ctc'))
             offcampus_data = Offcampus.objects.filter(session = session,type = 'intern',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),stipend=F('ctc'))
             complete_data = oncampus_data.union(offcampus_data)
@@ -391,7 +417,7 @@ class BasicStats(APIView):
             topCompaniesPPO = PPO.objects.filter(session = session).values(name = F('company__name'),logo = F('company__logo')).annotate(max_ctc = Max('ctc'))
             topCompanies = topCompaniesPlacement.union(topCompaniesOffCampus,topCompaniesPPO).order_by('-max_ctc')[:10]
             companiesVisited =  Placed.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name')).distinct().count()
-            course_name = "B.Tech"
+            course_name = request.user.student.course.name
             oncampus_data = Placed.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll =F('student__student'),branch = F('student__student__branch__branch_name'),ctc_ = F('job_role__ctc'))
             offcampus_data = Offcampus.objects.filter(session = session,type = 'placement',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),ctc_=F('ctc'))
             ppo_data = PPO.objects.filter(session = session,student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),ctc_=F('ctc'))
@@ -461,6 +487,8 @@ class BasicStats(APIView):
 
 class CommonQueries(APIView):
     pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
+
 
     def get(self,request):
         if request.query_params.get('session') == None or request.query_params["session"] == "":
@@ -516,6 +544,7 @@ class CommonQueries(APIView):
 ###################### Statistics Inner Page
 class CompanyRelatedQueries(APIView):
     pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         if request.query_params.get('session') == None:
@@ -651,6 +680,8 @@ class CompanyRelatedQueries(APIView):
 
  ########################## Dashboard API 
 class RecentNotifications(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self,request):
         result = {}
         recentDrive = Drive.objects.all().order_by('-starting_date')[:5]
@@ -666,27 +697,3 @@ class RecentNotifications(APIView):
             serializerexperience.append({'Id' : exp.id,'Name':exp.student.first_name,'Created_Date':exp.created_at.date(),'Image_Url':"https://picsum.photos/100"})
         result["Recent_Experience"] = serializerexperience
         return Response(result)
-
-    
-
-
-            
-
-
-
-        
-   
-
-            
-
-        
-
-        
-
-        
-
-        
-            
-
-
-

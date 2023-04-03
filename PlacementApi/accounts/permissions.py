@@ -76,3 +76,20 @@ class StudentNAPermissions(permissions.BasePermission):
 
         # If the student has no other permissions, allow access to StudentNAPermissions
         return True
+    
+
+class PlacementSession(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        try:
+            student = user.student
+        except:
+            return False
+
+        other_placements = [StudentNSPermissions(), StudentInternPermissions(), StudentPlacementPermissions()]
+        for placement in other_placements:
+            if placement.has_permission(request, view):
+                return True
+
+        # If the student has no other permissions, allow access to StudentNAPermissions
+        return False

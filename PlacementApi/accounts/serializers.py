@@ -49,13 +49,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['roll'] = user.username
+        print('token ----- ')
         try:
             student = user.student
             token["first_name"] = student.first_name
             token["last_name"] = student.last_name
-            token["img_url"] = "http://sakhanithnith.pagekite.me/" + student.image_url.url
             allowed_for = CourseYearAllowed.objects.get(year = student.current_year,course = student.course).type_allowed
             token["allowed_for"] = allowed_for
+            token["img_url"] = "http://sakhanithnith.pagekite.me/" + student.image_url.url
         except:
             pass
 

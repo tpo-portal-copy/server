@@ -20,6 +20,7 @@ urlpatterns = [
     path('placed/',views.StudentPlaced.as_view(),name = "placed-student"),
     path('interned/',views.StudentInterned.as_view(),name = "placed-student"),
     path('recentnotifications/',views.RecentNotifications.as_view(),name = "recent-notification"),
+    path('eligibility/<str:roll>',views.EligibilityCheck.as_view(),name = "checker-for-student-eligibility"),
    
     # path('cluster/',clusterchoosen.as_view(),name=  "detail-intern-student"),
 
