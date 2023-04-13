@@ -15,6 +15,7 @@ class RoleAdmin(admin.ModelAdmin):
 @admin.register(JobRoles)
 class JobRolesAdmin(admin.ModelAdmin):
     # search_fields = ('',)
-    pass
+    search_fields = ('drive__company__name',)
+    
 
 # admin.site.register(Branchallowed)

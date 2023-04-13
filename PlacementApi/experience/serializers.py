@@ -20,6 +20,7 @@ class StudentListingField(serializers.RelatedField):
 
 class ExperienceSerializer(serializers.ModelSerializer):
     company = serializers.SlugRelatedField(queryset = Company.objects.all(),slug_field='name')
+    company_image_url = serializers.SerializerMethodField()
     # student = serializers.SlugRelatedField(queryset = Student.objects.all(),slug_field='roll')
     # company = serializers.PrimaryKeyRelatedField(queryset = Company.objects.all()) 
     student = StudentListingField(queryset = Student.objects.all(),write_only = True)
@@ -34,6 +35,9 @@ class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
         fields = '__all__'
+    def get_company_image_url(self,obj):
+        return  'https://sakhanithnith.pagekite.me/media/' + str(obj.company.logo)
+
     def get_name(self,obj):
         result = {}
         if obj.anonymity:

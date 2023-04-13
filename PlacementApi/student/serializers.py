@@ -74,11 +74,8 @@ class StudentSerializer(serializers.ModelSerializer):
         result = {}
         try:
             course_year = CourseYearAllowed.objects.get(course=item.course,year=item.current_year)
-        except Company.DoesNotExist:
-            raise APIException("Error in Company Serializer")
         except CourseYearAllowed.MultipleObjectsReturned:
             new_val = CourseYearAllowed.objects.filter(course=item.course,year=item.current_year)
-            print(new_val)
             raise APIException("Details of multiple CourseYears present with same type")
  
         result["allowed_for"] = course_year.type_allowed
@@ -86,7 +83,9 @@ class StudentSerializer(serializers.ModelSerializer):
             try:
                ns = StudentNotSitting.objects.get(student = item)
             except StudentNotSitting.DoesNotExist:
-                result["sitting"] = True            
+                result["sitting"] = True   
+                # print(item.roll.username)
+                # result["resume"] = StudentPlacement.objects.get(student=item).resume     check for pass outs  
                 return result
             result["sitting"] = False
             result["reason"] = StudentNotSittingSerializer(ns).data["reason"]
@@ -109,6 +108,7 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
+    
 
     def create(self, validated_data):
         print(validated_data)

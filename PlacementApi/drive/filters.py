@@ -10,21 +10,21 @@ class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
 # from django.db.models import Q
 class DriveFilters(django_filters.FilterSet):
     company = django_filters.CharFilter(field_name='company__name',lookup_expr='iexact')
-    cluster = NumberInFilter(method = "check_cluster",label='cluster')
+    # cluster = NumberInFilter(method = "check_cluster",label='cluster')
     class Meta:
         model = Drive
-        fields = ['company','cluster']
-    def check_cluster(self,queryset,name,value):  
-        jobroles_prefetch = Prefetch('job_roles',queryset=JobRoles.objects.filter(cluster__in = value))
-        queryset = queryset.prefetch_related(jobroles_prefetch)
-        # return queryset
+        fields = ['company' ]
+    # def check_cluster(self,queryset,name,value):  
+    #     jobroles_prefetch = Prefetch('job_roles',queryset=JobRoles.objects.filter(cluster__in = value))
+    #     queryset = queryset.prefetch_related(jobroles_prefetch)
+    #     # return queryset
 
-        drive_list = []
-        for i in range(queryset.count()):
-            if queryset[i].job_roles.count() == 0:
-                drive_list.append(queryset[i].id)
+    #     drive_list = []
+    #     for i in range(queryset.count()):
+    #         if queryset[i].job_roles.count() == 0:
+    #             drive_list.append(queryset[i].id)
 
-        return queryset.exclude(id__in = drive_list)
+    #     return queryset.exclude(id__in = drive_list)
 
 
 

@@ -11,7 +11,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from .filters import DriveFilters
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q,Prefetch
 # Create your views here.
 # from rest_framework.views import APIView
 
@@ -63,13 +63,11 @@ class RolesList(generics.ListCreateAPIView):
 
 
 class DriveList(generics.ListCreateAPIView):
-    # queryset = Drive.objects.select_related('company')
     serializer_class = DriveSerializer
     pagination_class = CustomPagination
     filter_backends = (rest_framework.DjangoFilterBackend,)
     filterset_class = DriveFilters
-    # permission_classes = [permissions.IsAuthenticated]
-    
+   
     def get_queryset(self):
         session = None
         curr_date = timezone.now()
@@ -80,14 +78,32 @@ class DriveList(generics.ListCreateAPIView):
         else:
             session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
         type = CourseYearAllowed.objects.get(course = self.request.user.student.course,year = self.request.user.student.current_year).type_allowed
-        if type == "placement":
-            queryset = Drive.objects.filter(Q(session=session),Q(job_type = type) | Q(job_type = 'intern and fte')).order_by('-created_at')  
+        if type == "placement": 
+            c = self.request.user.student.student_placement.cluster
+            clusters = []
+            if self.request.query_params["cluster"] == "":
+                clusters = [c.cluster_1.cluster_id,c.cluster_2.cluster_id,c.cluster_3.cluster_id]
+            else:
+                for cl in self.request.query_params["cluster"].split(','):
+                    cl = int(cl)
+                    if cl in [c.cluster_1.cluster_id,c.cluster_2.cluster_id,c.cluster_3.cluster_id]:
+                        clusters.append(cl)
+            print([c.cluster_1.cluster_id,c.cluster_2.cluster_id,c.cluster_3.cluster_id],clusters)
+
+            queryset = Drive.objects.filter(Q(session=session),Q(job_type = type) | Q(job_type = 'intern and fte')).order_by('-starting_date') 
+            jobroles_prefetch = Prefetch('job_roles',queryset=JobRoles.objects.filter(cluster__cluster_id__in = clusters))
+            queryset = queryset.prefetch_related(jobroles_prefetch)
+            drive_list = []
+            for drive in queryset:
+                if drive.job_roles.count() == 0:
+                    drive_list.append(drive.id)
+            queryset =  queryset.exclude(id__in = drive_list)
         elif type == "intern":
-            queryset = Drive.objects.filter(session=session,job_type = type).order_by('-created_at')  
+            queryset = Drive.objects.filter(session=session,job_type = type).order_by('-starting_date')  
         else:
             queryset = None
 
-        return queryset
+        return queryset 
     
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -97,7 +113,6 @@ class DriveList(generics.ListCreateAPIView):
         else:
             return []
 
-    # @permission_classes([permissions.IsAuthenticated,custom_permissions.TPRPermissions])
     def post(self, request, *args, **kwargs):
         print(request.data)
         if "other" in request.data:    
