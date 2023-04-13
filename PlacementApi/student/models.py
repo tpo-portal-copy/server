@@ -126,7 +126,7 @@ class ClusterChosen(models.Model):
     cluster_2 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_2")
     cluster_3 = models.ForeignKey(Cluster,on_delete = models.CASCADE,related_name = "cluster_3")
     def __str__(self):
-        return self.student.student.roll.username
+        return str(self.cluster_1) + "," + str(self.cluster_2) + "," +str(self.cluster_3)
 
 
 
@@ -160,8 +160,12 @@ class BaseClass(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     profile = models.ForeignKey(Role, on_delete=models.CASCADE)
+    cluster = models.IntegerField(default=3)
     class Meta:
         abstract = True
+    # @property
+    # def cluster(self):
+    #     return Cluster.objects.get(starting__lt = self.ctc , ending__gte = self.ctc).cluster_id
 
 
 class PPO(BaseClass):

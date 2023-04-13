@@ -1,18 +1,19 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import status
+from rest_framework.exceptions import APIException
+
+from student.pagination import CustomPagination
 from .models import GeneralAnnouncement, CompanyAnnouncement, Resources
 from .serializers import GeneralAnnouncementSerializer,CompanyAnnouncementSerializer, ResourceSerializer
-from django.db.models import F, Value, CharField,Q,Max,Avg,Count
-from django.db.models.functions import Concat
+from django.db.models import F,Q,Max,Avg
 from accounts import permissions as custom_permissions
 from django.utils import timezone
 from student.models import Placed,Interned,Offcampus,PPO,StudentPlacement,StudentIntern
-from course.models import Course
+from course.models import Course,Specialization
 import pandas as pd
-
+from .filters import CompanyWiseFilter
 # Create your views here.
 class AnnouncementAPIView(generics.ListCreateAPIView):
     serializer_class_General = GeneralAnnouncementSerializer
@@ -92,7 +93,6 @@ class ResourceListCreateAPIView(generics.ListCreateAPIView):
         else:
             return []
     def list(self, request,branch):
-        # self.queryset = self.queryset.filter(branch = branch)
         result = {}
         faq = []
         article = []
@@ -150,6 +150,12 @@ class CollegePlacementStats(APIView):
         passingYear = int(passingYear)
         print(passingYear)
 
+        months = [(7,'July'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec'),(1,'Jan'),(2,'Feb'),(3,'March'),(4,'April'),(5,'May'),(6,'June')]
+        courseMonthWise = {}
+        for m in months:
+            courseMonthWise[m[0]] = {'month' : m[1]}
+        # return 
+    
         if jtype == "intern":
             topCompaniesIntern = Interned.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name'),logo =F('job_role__drive__company__logo')).annotate(max_stipend = Max('job_role__ctc')).order_by('-job_role__ctc')[:10]#student__student__passing_year 
             topCompaniesOffCampus = Offcampus.objects.filter(session = session,type = 'intern').values(name = F('company__name'),logo = F('company__logo')).annotate(max_stipend = Max('ctc'))
@@ -166,8 +172,7 @@ class CollegePlacementStats(APIView):
             totalStudentPlaced = 0
             result = {}
             totalSum = 0   # to calculate the avg of overall stipend
-            courseMonthWise = []
-            for course in courses:
+            for i,course in enumerate(courses):
                 total_offers= 0
                 max_stipend = 0
                 min_stipend = 0
@@ -175,16 +180,11 @@ class CollegePlacementStats(APIView):
                 total_student = 0
                 courseData = df[df["course"] == course]
 
-                ######### line chart info 
+                ######### stacked bar chart info 
                 monthWise = courseData.groupby(['month'])["roll"].count()
-                months = {}
-                m = [(7,'July'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec'),(1,'Jan'),(2,'Feb'),(3,'March'),(4,'April'),(5,'May'),(6,'June')]
-                for index,key in m:
-                    months[index] = ({'month':key,"offers":0})
                 for key in monthWise.index:
-                    months[key][offers] = monthWise[key]
-                val = list(months.values())
-                courseMonthWise.append({course : val})
+                    courseMonthWise[key][course] = monthWise[key]     
+                
                 total_offers = len(courseData)
                 if total_offers == 0:
                     course_wise = {"course":course,"offers":total_offers,"total_student":total_student,"avg_stipend":avg_stipend,"max_stipend":max_stipend,"min_stipend":min_stipend}
@@ -206,15 +206,18 @@ class CollegePlacementStats(APIView):
             serializer = []
             for company in topCompanies:
                 serializer.append(company)
-            value = [totalAppeared,totalStudentPlaced,offers,companiesVisited,course,round(totalSum/totalStudentPlaced,2)]
-            label = ["Student Appeared","Total Student Got Intern","Offers","Companies Visited","Courses","Avg"]
+            averageIn = 0
+            if totalStudentPlaced:
+                averageIn = round(totalSum/totalStudentPlaced,2)
+            value = [totalAppeared,totalStudentPlaced,offers,companiesVisited,course,averageIn]
+            label = ["Student Appeared","Selections","Offers","Companies Visited","Courses","Average Stipend"]
             statsInfo = []
             for i in range(len(label)):
                 statsInfo.append({"id":i,"label":label[i],"value" :value[i]})
             result["statsInfo"] = statsInfo
             result["topCompanies"] = serializer
             result["basicStats"] = courseWise   
-            result["monthWise"] = courseMonthWise
+            result["monthWise"] = list(courseMonthWise.values())
 
         elif jtype == "placement":
             topCompaniesIntern = Placed.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name'),logo =F('job_role__drive__company__logo')).annotate(max_ctc = Max('job_role__ctc')).order_by('-max_ctc')[:10]#student__student__passing_year 
@@ -233,25 +236,18 @@ class CollegePlacementStats(APIView):
             totalStudentPlaced = 0
             result = {}
             totalSum = 0   # to calculate the avg of overall stipend
-            courseMonthWise = []
-
-            for course in courses:
+            for i,course in enumerate(courses):
                 total_offers= 0
                 max_ctc = 0
                 min_ctc = 0
                 avg_ctc = 0
                 total_student = 0
                 courseData = df[df["course"] == course]
-                ######### line chart info 
+                ######### stacked bar chart 
                 monthWise = courseData.groupby(['month'])["roll"].count()
-                months = {}
-                m = [(7,'July'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec'),(1,'Jan'),(2,'Feb'),(3,'March'),(4,'April'),(5,'May'),(6,'June')]
-                for index,key in m:
-                    months[index] = ({'month':key,"offers":0})
+                
                 for key in monthWise.index:
-                    months[key][offers] = monthWise[key]
-                val = list(months.values())
-                courseMonthWise.append({course : val})
+                    courseMonthWise[key][course] = monthWise[key]     
                 total_offers = len(courseData)
                 if total_offers == 0:
                     course_wise = {"course":course,"offers":total_offers,"total_student":total_student,"avg_ctc":avg_ctc,"max_ctc":max_ctc,"min_ctc":min_ctc}
@@ -273,32 +269,194 @@ class CollegePlacementStats(APIView):
             serializer = []
             for company in topCompanies:
                 serializer.append(company)
-            value = [totalAppeared,totalStudentPlaced,offers,companiesVisited,course,round(totalSum/totalStudentPlaced,2)]
-            label = ["Student Appeared","Total Student Got Placement","Offers","Companies Visited","Courses","Avg"]
+            averagePl = 0
+            if totalStudentPlaced:
+                averagePl = round(totalSum/totalStudentPlaced,2)
+            value = [totalAppeared,totalStudentPlaced,offers,companiesVisited,course,averagePl]
+            label = ["Student Appeared","Selections","Offers","Companies Visited","Courses","Average CTC"]
             statsInfo = []
             for i in range(len(label)):
                 statsInfo.append({"id":i,"label":label[i],"value" :value[i]})
             result["statsInfo"] = statsInfo
             result["topCompanies"] = serializer
             result["basicStats"] = courseWise
-            result["monthWise"] = courseMonthWise
+            result["monthWise"] = list(courseMonthWise.values())
         else:
-            totalAppeared = PPO.objects.filter(student__passing_year = passingYear).values('student').count()
-            studentReceivedPPO = PPO.objects.filter(student__passing_year = passingYear).values('student').distinct().count()
-            companiesVisited = PPO.objects.filter(student__passing_year = passingYear).values('company').distinct().count() 
-            offers = PPO.objects.filter(student__passing_year = passingYear).count()
+            totalAppeared = PPO.objects.filter(session = session).values('student').count()
+            studentReceivedPPO = PPO.objects.filter(session = session).values('student').distinct().count()
+            companiesVisited = PPO.objects.filter(session = session).values('company').distinct().count() 
+            offers = PPO.objects.filter(session = session).count()
             course = Course.objects.all().count()
-            value = [totalAppeared,studentReceivedPPO,offers,companiesVisited,course]
-            label = ["Student Appeared","Total student recieved PPO","Offers","Companies Visited","Courses"]
+            averagePPO = PPO.objects.filter(session = session).values('student').annotate(max_ctc = Max('ctc'))
+            averagePPO =averagePPO.aggregate(Avg('max_ctc'))
+            value = [totalAppeared,studentReceivedPPO,offers,companiesVisited,course,averagePPO['max_ctc__avg']]
+            label = ["Student Appeared","Total student recieved PPO","Offers","Companies Visited","Courses","Average CTC"]
             statsInfo = []
             result = {}
             for i in range(len(label)):
                 statsInfo.append({"id":i,"label":label[i],"value" :value[i]})
             result["statsInfo"] = statsInfo
+            result["monthWise"] = []
+
 
         return Response(result,status=status.HTTP_200_OK)
 
+####### company wise stats
+class CompanyWiseStats(APIView):
+    pagination_class = CustomPagination
+    # permission_classes = [permissions.IsAuthenticated]
+    filter_class = CompanyWiseFilter
 
+    def get(self, request, *args, **kwargs):
+
+        if request.query_params.get('session') == None:
+            curr_date = timezone.now()
+            date = timezone.datetime(curr_date.year, 7, 1, tzinfo=timezone.get_current_timezone())
+            date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+            if curr_date <= date:
+                session = str(curr_date.year-1) + "-"+str(curr_date.year)[2:]
+            else:
+                session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
+        else:
+            session = request.query_params["session"]
+        if request.query_params.get('jtype') == None:
+            jtype = "placement"
+        else:
+            jtype = request.query_params["jtype"]
+        if request.query_params.get('company') == None:
+            raise APIException("Company name can't be empty")
+        else:
+            company = request.query_params["company"]
+
+        result = {}
+        result["company"] = company
+        print(jtype)
+
+        if jtype == "intern":
+            oncampusData = Interned.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_name'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) # change branch_name to branch_fullname
+            oncampusData = self.filter_class(request.query_params,oncampusData).qs
+            offcampusData = self.filter_class(request.query_params,offcampusData).qs
+            completeData = oncampusData.union(offcampusData)
+            result['totaloffers'] = completeData.count()
+
+        else:
+            oncampusData = Placed.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_name'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name"))
+            ppoData = PPO.objects.filter(session = session,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) ## change branch_name to branch_fullname
+            oncampusData = self.filter_class(request.query_params,oncampusData).qs
+            offcampusData = self.filter_class(request.query_params,offcampusData).qs
+            ppoData = self.filter_class(request.query_params,ppoData).qs
+            completeData = oncampusData.union(offcampusData,ppoData)
+            
+            result['totaloffers'] = completeData.count()
+        selectedStudents = []
+        for i,val in enumerate(completeData):
+            name = val.pop('fname')
+            lname = val.pop('lname')
+            mname = val.pop('mname')
+            if lname:
+                name += " " + lname
+            if mname:
+                name += " " + mname
+            val["name"] = name
+            selectedStudents.append({'id' : i,**val})
+        result["selectedStudents"] = selectedStudents
+        return Response(result)
+
+
+##################### placed student data   
+class StudentWiseStats(APIView):
+    pagination_class = CustomPagination
+    # permission_classes = [permissions.IsAuthenticated]
+    filter_class = CompanyWiseFilter
+
+    def get(self, request, *args, **kwargs):
+
+        if request.query_params.get('session') == None:
+            curr_date = timezone.now()
+            date = timezone.datetime(curr_date.year, 7, 1, tzinfo=timezone.get_current_timezone())
+            date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+            if curr_date <= date:
+                session = str(curr_date.year-1) + "-"+str(curr_date.year)[2:]
+            else:
+                session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
+        else:
+            session = request.query_params["session"]
+        if request.query_params.get('jtype') == None:
+            jtype = "placement"
+        else:
+            jtype = request.query_params["jtype"]
+
+        if request.query_params.get("course") == None or request.query_params.get("course") == "":
+            course = "B.Tech"
+        else:
+            course = request.query_params["course"]
+
+
+        result = {}
+        print(session,jtype,course)
+        if jtype == "intern":
+            oncampusData = Interned.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_fullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F('job_role__drive__company__name'))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
+            oncampusData = self.filter_class(request.query_params,oncampusData).qs
+            offcampusData = self.filter_class(request.query_params,offcampusData).qs
+            completeData = oncampusData.union(offcampusData)
+            var = "stipend"
+       
+
+        else:
+            oncampusData = Placed.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_fullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F("job_role__drive__company__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
+            ppoData = PPO.objects.filter(session = session).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F("company__name"))
+            oncampusData = self.filter_class(request.query_params,oncampusData).qs
+            offcampusData = self.filter_class(request.query_params,offcampusData).qs
+            ppoData = self.filter_class(request.query_params,ppoData).qs
+            completeData = oncampusData.union(offcampusData,ppoData)
+            var = 'ctc'
+            # print(completeData)
+        result["totalOffers"] = completeData.count()            
+        selectedStudents = []
+        for i,val in enumerate(completeData):
+            name = val.pop('fname')
+            lname = val.pop('lname')
+            mname = val.pop('mname')
+            if lname:
+                name += " " + lname
+            if mname:
+                name += " " + mname
+            val["name"] = name
+            selectedStudents.append({'id' : i,**val})
+
+        result["selectedStudents"] = selectedStudents
+
+        branches = Specialization.objects.filter(course__name = course).values_list('branch_fullname',flat=True)
+        complete_data = pd.DataFrame(completeData)
+        course_wise = []
+        complete_data = complete_data[complete_data["course"] == course]
+        for branch in branches:
+            total_offers= 0
+            max_stipend = 0
+            min_stipend = 0
+            avg_stipend = 0
+            if len(complete_data) == 0:
+                continue
+            branch_data = complete_data[complete_data["branch"] == branch]
+            if len(branch_data) == 0:
+                branch_wise = {"course":course,"branch":branch,"offers":total_offers,"avg_{0}".format(var):avg_stipend,"max_{0}".format(var):max_stipend,"min_{0}".format(var):min_stipend}
+                course_wise.append(branch_wise)
+                continue
+
+            branch_data = branch_data.groupby(['rollNumber']).agg({'ctc_offered' : ['max','mean','sum','min'],'rollNumber':['count']})
+            total_student = len(branch_data)
+            total_offers = branch_data.get('rollNumber')["count"].sum()
+            max_stipend = branch_data.get('ctc_offered')["max"].max()
+            min_stipend = branch_data.get('ctc_offered')["max"].min()
+            avg_stipend = round(branch_data.get('ctc_offered')["max"].sum()/total_student,2)
+            branch_wise = {"course":course,"branch":branch,"offers":total_offers,"avg_{0}".format(var):avg_stipend,"max_{0}".format(var):max_stipend,"min_{0}".format(var):min_stipend}
+            course_wise.append(branch_wise)
+        result["courseWise"] = course_wise
+        return Response(result)
 
 
         

@@ -7,12 +7,10 @@ from .serializers import *
 from rest_framework import status
 from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter,PPOFilter
 from .pagination import CustomPagination
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Max,Count,Avg,Min
 from django.db.models import F
 from experience.models import Experience
-from rest_framework import filters,permissions
+from rest_framework import permissions
 from accounts import permissions as custom_permissions
 import pandas as pd
 
@@ -321,7 +319,7 @@ class StudentPlaced(generics.ListCreateAPIView):
 
 
 class BasicStats(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     def get(self,request):
 
         if request.query_params.get('session') == None or request.query_params["session"] == "":
@@ -487,7 +485,7 @@ class BasicStats(APIView):
 
 class CommonQueries(APIView):
     pagination_class = CustomPagination
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
 
     def get(self,request):
@@ -523,7 +521,7 @@ class CommonQueries(APIView):
             elif jtype == "placement":
                 queryset = Placed.objects.filter(job_role__drive__session = session,job_role__drive__company__name__icontains = name).values(name = F('job_role__drive__company__name')).annotate(max_ctc = Max('job_role__ctc')).order_by('-max_ctc')
             else:
-                queryset = Placed.objects.none()
+                queryset = PPO.objects.filter(session = session,company__name__icontains = name).values(name = F('company__name')).annotate(max_ctc = Max('ctc')).order_by('-max_ctc')
             paginator = self.pagination_class()
             queryset = paginator.paginate_queryset(queryset,request)
             return paginator.get_paginated_response(queryset) 
@@ -534,7 +532,7 @@ class CommonQueries(APIView):
             elif jtype == "placement":
                 queryset = Placed.objects.filter(job_role__drive__session = session,job_role__drive__company__name__icontains = name).values(name = F('job_role__drive__company__name')).annotate(offers = Count('student')).order_by('-offers')
             else:
-                queryset = Placed.objects.none()
+                queryset = PPO.objects.filter(session = session,company__name__icontains = name).values(name = F('company__name')).annotate(offers = Count('student')).order_by('-offers')               
             paginator = self.pagination_class()
             queryset = paginator.paginate_queryset(queryset,request)
             return paginator.get_paginated_response(queryset) 
@@ -544,7 +542,7 @@ class CommonQueries(APIView):
 ###################### Statistics Inner Page
 class CompanyRelatedQueries(APIView):
     pagination_class = CustomPagination
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         if request.query_params.get('session') == None:
