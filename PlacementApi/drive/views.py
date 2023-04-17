@@ -77,6 +77,10 @@ class DriveList(generics.ListCreateAPIView):
             session = str(curr_date.year-1) + "-"+str(curr_date.year)[2:]
         else:
             session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
+
+        if self.request.user.username == "tpo@nith.ac.in":
+            queryset = Drive.objects.filter(session = session)
+            return queryset
         type = CourseYearAllowed.objects.get(course = self.request.user.student.course,year = self.request.user.student.current_year).type_allowed
         if type == "placement": 
             c = self.request.user.student.student_placement.cluster
@@ -105,13 +109,14 @@ class DriveList(generics.ListCreateAPIView):
 
         return queryset 
     
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [permissions.IsAuthenticated(),custom_permissions.PlacementSession()]
-        elif self.request.method == 'POST':
-            return [permissions.IsAuthenticated(),custom_permissions.TPRPermissions()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [permissions.IsAuthenticated(),custom_permissions.PlacementSession()]
+    #     elif self.request.method == 'POST':
+    #         return [permissions.IsAuthenticated()]
+    #     # custom_permissions.TPRPermissions()|custom_permissions.TPOPermissions()
+    #     else:
+    #         return []
 
     def post(self, request, *args, **kwargs):
         print(request.data)

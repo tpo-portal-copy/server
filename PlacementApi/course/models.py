@@ -1,10 +1,13 @@
 from django.db import models
+from django.core.validators import RegexValidator
+from accounts.utils import GetSession
 
 # Create your models here.
 class Cluster(models.Model):
     cluster_id = models.IntegerField(primary_key=True)
     starting = models.FloatField(default=0)
     ending = models.FloatField(default=0)
+    session = models.CharField(max_length=7,default=GetSession().CurrentSession(),validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
 
     def __str__(self) -> str:
         return str(self.cluster_id) 
@@ -13,15 +16,18 @@ class Course(models.Model):
     name = models.CharField(max_length=20, null = True)
     years = models.IntegerField(default=4,null= True)
     def __str__(self) -> str:
-        return self.name
+        return self.name 
 
 class Specialization(models.Model):
     branch_name = models.CharField(max_length=200)
     branch_fullname = models.CharField(max_length=200,null=True)
     course = models.ForeignKey(Course,on_delete=models.CASCADE)
+    oncampus = models.IntegerField(default=75)
+    offcampuspppo = models.IntegerField(default = 80)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.branch_name
+        return self.branch_name 
 
 
 # We need to fill manually

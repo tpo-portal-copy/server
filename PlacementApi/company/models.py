@@ -44,7 +44,8 @@ class JNF(models.Model):
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     is_placement = models.BooleanField()
     is_intern = models.BooleanField()
-    mode_of_hiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site')], max_length=20)
+    is_six_months_intern = models.BooleanField(default=False) 
+    mode_of_hiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site'),('hybrid','Hybrid')], max_length=20)
     pre_placement_talk = models.BooleanField(default=True)
     aptitude_test = models.BooleanField(default=True)
     technical_test = models.BooleanField(default=True)
@@ -97,7 +98,7 @@ class JNF_intern(models.Model):
     tentative_start = models.DateField()
     job_profile = models.CharField(max_length=100)
     stipend = models.FloatField() # stipend to be given per month in thousands
-    ctc = models.FloatField()  # expected ctc to be given if 
+    ctc_after_ppo = models.FloatField()  # expected ctc to be given if 
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])  # default cgpi puchni h
     eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
