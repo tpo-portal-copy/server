@@ -348,7 +348,7 @@ class BasicStats(APIView):
 
         if jtype == "intern":
             topCompaniesIntern = Interned.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name'),logo =F('job_role__drive__company__logo')).annotate(max_stipend = Max('job_role__ctc')).order_by('-job_role__ctc')[:10]#student__student__passing_year 
-            topCompaniesOffCampus = Offcampus.objects.filter(session = session,type = 'intern').values(name = F('company__name'),logo = F('company__logo')).annotate(max_stipend = Max('ctc'))
+            topCompaniesOffCampus = Offcampus.objects.filter(session = session,type = 'intern').values(name = F('company__name'),logo =F('company__logo')).annotate(max_stipend = Max('ctc'))
             topCompanies = topCompaniesIntern.union(topCompaniesOffCampus).order_by('-max_stipend')[:10]
             companiesVisited = Interned.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name')).distinct().count() 
             print(companiesVisited)
@@ -380,7 +380,6 @@ class BasicStats(APIView):
                     continue
 
                 branch_data = branch_data.groupby(['roll']).agg({'stipend' : ['max','mean','sum','min'],'roll':['count','unique']})
-                # print(branch_data)
             
                 total_student = len(branch_data)
                 total_offers = branch_data.get('roll')["count"].sum()
@@ -388,9 +387,6 @@ class BasicStats(APIView):
                 min_stipend = branch_data.get('stipend')["max"].min()
                 avg_stipend = round(branch_data.get('stipend')["max"].sum()/total_student,2)
                 temp += total_offers
-
-                # check = branch_data.get('stipend')["sum"].sum()/total_offers
-                # print(max_stipend,min_stipend,avg_stipend,total_offers,check)
                 branch_wise = {"course":course_name,"branch":branch,"offers":total_offers,"avg_stipend":avg_stipend,"max_stipend":max_stipend,"min_stipend":min_stipend}
                 course_wise.append(branch_wise)
             print(temp)

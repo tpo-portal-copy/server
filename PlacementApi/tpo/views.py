@@ -23,7 +23,7 @@ class AnnouncementAPIView(generics.ListCreateAPIView):
         if self.request.method == 'GET':
             return [permissions.IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [custom_permissions.TPOPermissions()|custom_permissions.TPRPermissions()]
+            return [custom_permissions.TPOPermissions()] # custom_permissions.TPRPermissions()]
         else:
             return []
    
@@ -42,7 +42,7 @@ class AnnouncementAPIView(generics.ListCreateAPIView):
         if request_type == "general" or request_type == "results":
             serializer = self.serializer_class_General(data=request.data)
             pass
-        elif request_type == "company":
+        elif request_type == "placement/intern":
             serializer = self.serializer_class_Company(data=request.data)
             pass
         else:
@@ -89,7 +89,7 @@ class ResourceListCreateAPIView(generics.ListCreateAPIView):
         if self.request.method == 'GET':
             return [permissions.IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [custom_permissions.TPOPermissions()|custom_permissions.TPRPermissions()]
+            [custom_permissions.TPRPermissions()] # custom_permissions.TPOPermissions()]
         else:
             return []
     def list(self, request,branch):
@@ -319,10 +319,10 @@ class CompanyWiseStats(APIView):
                 session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
         else:
             session = request.query_params["session"]
-        if request.query_params.get('jtype') == None:
+        if request.query_params.get('type') == None:
             jtype = "placement"
         else:
-            jtype = request.query_params["jtype"]
+            jtype = request.query_params["type"]
         if request.query_params.get('company') == None:
             raise APIException("Company name can't be empty")
         else:

@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.encoding import force_bytes, smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from django.utils.encoding import force_bytes,DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.http import HttpResponsePermanentRedirect
 from .models import UserOtp

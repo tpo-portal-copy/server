@@ -7,26 +7,53 @@ from accounts import permissions as custom_permissions
 
 # Create your views here.
 class CourseAPIView(generics.ListCreateAPIView):
-
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     
     
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+class courseAPIViewDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
-class SpecializationAPIView(generics.ListCreateAPIView):
 
-    queryset = Specialization.objects.all()
-    serializer_class = SpecialisationSerializer
-
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-class SpecilizationDetailAPIView(views.APIView):
-  
+class SpecializationAPIView(views.APIView):
+    def get(self,request):
+        branches = Specialization.objects.all()
+        serializer = SpecialisationSerializer(branches,many = True)
+        return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        try:
+            course = Course.objects.get(name = request.data["course"]["name"])
+        except Course.DoesNotExist:
+            serializer_course = CourseSerializer(data =request.data["course"])
+            ### coures year alllowed bhi likhna hai
+            if serializer_course.is_valid():
+                course = serializer_course.save() 
+        for data in request.data["branches"]:
+            data["course"] = course.name
+            serializer = SpecialisationSerializer(data = data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_201_CREATED)
+    def put(self,request):
+        course = Course.objects.get(id = request.data["course"]["id"]) # we need id with course
+        course_serializer = CourseSerializer(instance=course,data = request.data["course"])
+        if course_serializer.is_valid():
+           course = course_serializer.save()
+        for data in request.data["branches"]:
+            data["course"] = course.name
+            branch = Specialization.objects.get(id = data["id"])
+            serializer = SpecialisationSerializer(instance = branch,data = data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_201_CREATED)
+class SpecializationDetailAPIView(views.APIView):  
     def get(self,request,id):
-        branches = Specialization.objects.filter(course = id).values('id','branch_name')
+        branches = Specialization.objects.filter(course = id).values('id','branch_name','branch_fullname')
         return Response({"branches":branches})
 
 

@@ -36,20 +36,17 @@ class ExperienceSerializer(serializers.ModelSerializer):
         model = Experience
         fields = '__all__'
     def get_company_image_url(self,obj):
-        return  'https://sakhanithnith.pagekite.me/media/' + str(obj.company.logo)
+        return  'https://tpoportal.pagekite.me/media/' + str(obj.company.logo)
 
     def get_name(self,obj):
-        result = {}
+        n = ""
         if obj.anonymity:
-            result = {}
+            n = ""
         else:
-            print(obj)
-            if obj.student.image_url == None:
-                result = {'name' : obj.student.first_name+ " " +obj.student.last_name}
-            else:
-                result = {'name' : obj.student.first_name+ " " +obj.student.last_name,'logo':"https://picsum.photos/200.jpg"}               
-
-        return result
+            n = obj.student.first_name
+            if obj.student.last_name:
+                n = n + " " +obj.student.last_name            
+        return n
     def get_description_read(self,obj):
         return obj.description[:250]
 

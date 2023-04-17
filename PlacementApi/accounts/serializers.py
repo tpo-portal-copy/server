@@ -56,9 +56,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             token["last_name"] = student.last_name
             allowed_for = CourseYearAllowed.objects.get(year = student.current_year,course = student.course).type_allowed
             token["allowed_for"] = allowed_for
-            token["img_url"] = "http://sakhanithnith.pagekite.me/" + student.image_url.url
+            token["img_url"] = "https://tpoportal.pagekite.me/" + student.image_url.url
         except:
-            pass
+            if user.username == "tpo@nith.ac.in":
+                token["role"] = 'TPO'
 
         return token
 
