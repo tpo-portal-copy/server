@@ -333,17 +333,17 @@ class CompanyWiseStats(APIView):
         print(jtype)
 
         if jtype == "intern":
-            oncampusData = Interned.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_name'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
-            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) # change branch_name to branch_fullname
+            oncampusData = Interned.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branchName'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchName'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) # change branchName to branchFullname
             oncampusData = self.filter_class(request.query_params,oncampusData).qs
             offcampusData = self.filter_class(request.query_params,offcampusData).qs
             completeData = oncampusData.union(offcampusData)
             result['totaloffers'] = completeData.count()
 
         else:
-            oncampusData = Placed.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_name'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
-            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name"))
-            ppoData = PPO.objects.filter(session = session,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_name'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) ## change branch_name to branch_fullname
+            oncampusData = Placed.objects.filter(job_role__drive__session = session,job_role__drive__company__name = company).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branchName'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),jobRole = F("job_role__role__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchName'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name"))
+            ppoData = PPO.objects.filter(session = session,company__name = company).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchName'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),jobRole = F("profile__name")) ## change branchName to branchFullname
             oncampusData = self.filter_class(request.query_params,oncampusData).qs
             offcampusData = self.filter_class(request.query_params,offcampusData).qs
             ppoData = self.filter_class(request.query_params,ppoData).qs
@@ -397,8 +397,8 @@ class StudentWiseStats(APIView):
         result = {}
         print(session,jtype,course)
         if jtype == "intern":
-            oncampusData = Interned.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_fullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F('job_role__drive__company__name'))
-            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
+            oncampusData = Interned.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branchFullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F('job_role__drive__company__name'))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchFullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
             oncampusData = self.filter_class(request.query_params,oncampusData).qs
             offcampusData = self.filter_class(request.query_params,offcampusData).qs
             completeData = oncampusData.union(offcampusData)
@@ -406,9 +406,9 @@ class StudentWiseStats(APIView):
        
 
         else:
-            oncampusData = Placed.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branch_fullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F("job_role__drive__company__name"))
-            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
-            ppoData = PPO.objects.filter(session = session).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branch_fullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F("company__name"))
+            oncampusData = Placed.objects.filter(job_role__drive__session = session).values(fname = F('student__student__first_name'),mname = F('student__student__middle_name'),lname = F('student__student__last_name'),rollNumber = F('student__student__roll__username'),branch = F('student__student__branch__branchFullname'),course = F('student__student__course__name'),ctc_offered = F('job_role__ctc'),clusterc = F('job_role__cluster'),companyName = F("job_role__drive__company__name"))
+            offcampusData = Offcampus.objects.filter(session = session,type=jtype).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchFullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F('company__name'))
+            ppoData = PPO.objects.filter(session = session).values(fname = F('student__first_name'),mname = F('student__middle_name'),lname = F('student__last_name'),rollNumber = F('student__roll__username'),branch = F('student__branch__branchFullname'),course = F('student__course__name'),ctc_offered = F('ctc'),clusterc = F('cluster'),companyName = F("company__name"))
             oncampusData = self.filter_class(request.query_params,oncampusData).qs
             offcampusData = self.filter_class(request.query_params,offcampusData).qs
             ppoData = self.filter_class(request.query_params,ppoData).qs
@@ -430,7 +430,7 @@ class StudentWiseStats(APIView):
 
         result["selectedStudents"] = selectedStudents
 
-        branches = Specialization.objects.filter(course__name = course).values_list('branch_fullname',flat=True)
+        branches = Specialization.objects.filter(course__name = course).values_list('branchFullname',flat=True)
         complete_data = pd.DataFrame(completeData)
         course_wise = []
         complete_data = complete_data[complete_data["course"] == course]

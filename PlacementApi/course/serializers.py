@@ -11,6 +11,7 @@ class SpecialisationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialization
         fields = '__all__'
+        # read_only_fields = ('onCampus','offCampusPpo','isActive')
 
 class CourseYearAllowedSerializer(serializers.ModelSerializer):
     course = serializers.SlugRelatedField(queryset = Course.objects.all(),slug_field="name")

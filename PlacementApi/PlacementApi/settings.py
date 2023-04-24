@@ -91,10 +91,10 @@ WSGI_APPLICATION = 'PlacementApi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'college',
-        'USER': 'root',
+        'NAME': os.environ.get("DATABASE_NAME"),
+        'USER': os.environ.get("DATABASE_USER_NAME"),
         'PASSWORD': os.environ.get("DATABASE_PASSWORD"),
-        'HOST': 'localhost',  
+        'HOST': os.environ.get("DATABASE_HOST"),  
         'PORT': '3306',
     }
 }

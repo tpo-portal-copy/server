@@ -53,7 +53,7 @@ class SpecializationAPIView(views.APIView):
         return Response(status=status.HTTP_201_CREATED)
 class SpecializationDetailAPIView(views.APIView):  
     def get(self,request,id):
-        branches = Specialization.objects.filter(course = id).values('id','branch_name','branch_fullname')
+        branches = Specialization.objects.filter(course = id).values('id','branchName','branchFullname')
         return Response({"branches":branches})
 
 

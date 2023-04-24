@@ -39,7 +39,7 @@ gender_types = [
 # custom model manager for excluding banned student
 class StudentManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().exclude(banned_date__lte=timezone.now(), over_date__gte=timezone.now()) 
+        return super().get_queryset().exclude(banned_date__lte=timezone.now(), over_date__gte=timezone.now())
 
 class Student(models.Model):
     def student_image_directory_path(instance, filename):
@@ -84,7 +84,6 @@ class Student(models.Model):
     gap_ug_pg = models.IntegerField(default=0)
     banned_date = models.DateTimeField(default=timezone.now)
     over_date = models.DateTimeField(default=timezone.now)
-    
 
     objects = models.Manager()
     banned = StudentManager()
@@ -129,7 +128,6 @@ class ClusterChosen(models.Model):
         return str(self.cluster_1) + "," + str(self.cluster_2) + "," +str(self.cluster_3)
 
 
-
 class Recruited(models.Model):
     # drive = models.ForeignKey(Drive,on_delete=models.CASCADE)
     job_role = models.ForeignKey(JobRoles, on_delete=models.CASCADE)
@@ -140,20 +138,18 @@ class Recruited(models.Model):
 
 # This Table is only for oncampus placed students and PPO both
 class Placed(Recruited):
-    student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentPlacement,on_delete=models.CASCADE, related_name='student_placed')
     def __str__(self):
         return self.student.student.roll.username
 
 
 class Interned(Recruited):
-    student = models.ForeignKey(StudentIntern,on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentIntern,on_delete=models.CASCADE, related_name='student_interned')
     def __str__(self):
         return self.student.student.roll.username   
 
 
-
 class BaseClass(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     ctc = models.FloatField() # in LPA
     created_at = models.DateTimeField(auto_now_add=True)
@@ -169,10 +165,11 @@ class BaseClass(models.Model):
 
 
 class PPO(BaseClass):
-    pass
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='student_ppo')
+
+
 # For Offcampus placements
 class Offcampus(BaseClass):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='student_offcampus')
     # Add the company in Company Table if it does not exist in case of Offcampus placements
     type = models.CharField(max_length=20, choices= [('intern','Internship'),('placement','Placement')])
-    pass
-

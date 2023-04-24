@@ -6,7 +6,7 @@ class TPRPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         try:
-            TPR.objects.get(name__roll = user)
+            TPR.objects.get(name__student__roll = user)
         except TPR.DoesNotExist:
             return False
         return True
@@ -15,6 +15,14 @@ class TPOPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return user.is_staff
+
+class TPO_TPR_Permissions(permissions.BasePermission):
+    def has_permission(self, request, view):
+        allowed_users = [TPRPermissions(), TPOPermissions()]
+        for user_type in allowed_users:
+            if user_type.has_permission(request, view):
+                return True
+        return False
 
 class StudentPlacementPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -80,12 +88,6 @@ class StudentNAPermissions(permissions.BasePermission):
 
 class PlacementSession(permissions.BasePermission):
     def has_permission(self, request, view):
-        user = request.user
-        try:
-            student = user.student
-        except:
-            return False
-
         other_placements = [StudentNSPermissions(), StudentInternPermissions(), StudentPlacementPermissions()]
         for placement in other_placements:
             if placement.has_permission(request, view):

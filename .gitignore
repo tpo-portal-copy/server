@@ -3,6 +3,6 @@ myenv
 temp
 __pycache__/
 migrations/
-!__init__.py
+!migrations/__init__.py
 .env
 media/

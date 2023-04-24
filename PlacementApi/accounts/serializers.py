@@ -40,7 +40,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
-        user.is_active = False
+        user.isActive = False
         user.save()
         return user
 
@@ -60,6 +60,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         except:
             if user.username == "tpo@nith.ac.in":
                 token["role"] = 'TPO'
+
+        try:
+            tpr = user.student_tpr
+            print("This is TPR", tpr)
+            token["role"] = 'TPR'
+        except:
+            print("Here it is")
+            pass
 
         return token
 

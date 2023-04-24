@@ -42,7 +42,7 @@ class RegisterAPI(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            not_verified = User.objects.get(username = request.data["username"],is_active = False)
+            not_verified = User.objects.get(username = request.data["username"],isActive = False)
             # not_verified = UserOtp.objects.get(user__username = request.data["username"])
             not_verified.delete()
         except:
@@ -71,14 +71,14 @@ class OTPVerification(views.APIView):
         otp = int(request.data['otp'])
         # password = request.data['password']
         try:
-            user = User.objects.get(username=username, is_active = False)
+            user = User.objects.get(username=username, isActive = False)
             print(user)
             userotp = UserOtp.objects.get(user=user)
             print(userotp)
             if(datetime.datetime.now(pytz.utc) > userotp.time+datetime.timedelta(minutes=5)):
                 return Response({"msg":"OTP Expired. Regenerate"}, status=status.HTTP_400_BAD_REQUEST)
             if otp == userotp.otp:
-                user.is_active = True
+                user.isActive = True
                 user.save()
                 userotp.delete()
                 MailSender().registration_success(data={"username":user.username},email=user.email)
@@ -92,7 +92,7 @@ class OTPResend(views.APIView):
     def post(self,request):
         username = request.data["username"]
         try:
-            user = User.objects.get(username=username,is_active = False)
+            user = User.objects.get(username=username,isActive = False)
             otp = random.randint(100000,999999)
             userotp = UserOtp.objects.get(user=user)
             userotp.otp = otp

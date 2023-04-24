@@ -5,7 +5,7 @@ from drive.models import Drive
 from .models import *
 from .serializers import *
 from rest_framework import status
-from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter,PPOFilter
+from .filters import StudentPlacementFilter,StudentInternFilter,StudentNSFilter,StudentFilter,PPOFilter, StudentTPOFilter
 from .pagination import CustomPagination
 from django.db.models import Max,Count,Avg,Min
 from django.db.models import F
@@ -87,7 +87,6 @@ class PPOList(generics.ListCreateAPIView):
         else:
             return []
 
-           
 
 class StudentList(APIView):
     pagination_class = CustomPagination
@@ -120,6 +119,7 @@ class StudentList(APIView):
             print(new_student.errors)
         return Response(new_student.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
 class StudentDetail(APIView):
     permission_classes = [permissions.IsAuthenticated]  
     def get(self,request,pk):
@@ -140,6 +140,7 @@ class StudentDetail(APIView):
         print(student)
         student.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class StudentPlacementList(APIView):
     pagination_class = CustomPagination
@@ -167,6 +168,7 @@ class StudentPlacementList(APIView):
         # print(new_student_placement.errors)
         return Response(new_student_placement.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
 class StudentPlacementDetail(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self,request,pk):
@@ -189,6 +191,7 @@ class StudentPlacementDetail(APIView):
         student_placement.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class StudentInternList(APIView):
     filter_class = StudentInternFilter
     pagination_class = CustomPagination
@@ -210,7 +213,6 @@ class StudentInternList(APIView):
             new_student_intern.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(new_student_intern.errors,status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class StudentInternDetail(APIView):
@@ -257,7 +259,6 @@ class StudentNotSittingList(APIView):
         return Response(new_student_ns.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class StudentNotSittingDetail(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self,request,pk):
@@ -277,7 +278,7 @@ class StudentNotSittingDetail(APIView):
         student_ns = StudentNotSitting.objects.get(student__roll__username = pk)
         student_ns.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class StudentInterned(generics.ListCreateAPIView):
     queryset = Interned.objects.all()
@@ -308,14 +309,19 @@ class StudentPlaced(generics.ListCreateAPIView):
         else:
             print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 ##################################################################################
-
 # class ClusterChoosen(generics.GenericAPIView):
 #     queryset = ClusterChosen.objects.all()
 #     serializer_class = ClusterChosenSerializer
 
+
+class Student_TPO_Detail(generics.ListAPIView):
+    queryset = Student.objects.all()
+    pagination_class = CustomPagination
+    serializer_class = StudentTPOSerializer
+    filterset_class = StudentTPOFilter
 
 
 class BasicStats(APIView):
@@ -339,12 +345,9 @@ class BasicStats(APIView):
         passingYear = "20" + session[5:]
         passingYear = int(passingYear)
         # print(passingYear)
-        print("&&&&&&&&&&&&",session)
         
         statsInfo = []
         result = {}
-        
-        
 
         if jtype == "intern":
             topCompaniesIntern = Interned.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name'),logo =F('job_role__drive__company__logo')).annotate(max_stipend = Max('job_role__ctc')).order_by('-job_role__ctc')[:10]#student__student__passing_year 
@@ -354,13 +357,13 @@ class BasicStats(APIView):
             print(companiesVisited)
             course_name = request.user.student.course.name
             print(course_name)
-            oncampus_data = Interned.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll = F('student__student'),branch = F('student__student__branch__branch_name'),stipend = F('job_role__ctc'))
-            offcampus_data = Offcampus.objects.filter(session = session,type = 'intern',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),stipend=F('ctc'))
+            oncampus_data = Interned.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll = F('student__student'),branch = F('student__student__branch__branchName'),stipend = F('job_role__ctc'))
+            offcampus_data = Offcampus.objects.filter(session = session,type = 'intern',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branchName'),stipend=F('ctc'))
             complete_data = oncampus_data.union(offcampus_data)
             # print(complete_data)
             offers = complete_data.count()
             # print(offers)
-            branches = Specialization.objects.filter(course__name = course_name).values_list('branch_name',flat=True)
+            branches = Specialization.objects.filter(course__name = course_name).values_list('branchName',flat=True)
             complete_data = pd.DataFrame(complete_data)
             temp = 0
             course_wise = []
@@ -412,15 +415,15 @@ class BasicStats(APIView):
             topCompanies = topCompaniesPlacement.union(topCompaniesOffCampus,topCompaniesPPO).order_by('-max_ctc')[:10]
             companiesVisited =  Placed.objects.filter(job_role__drive__session = session).values(name = F('job_role__drive__company__name')).distinct().count()
             course_name = request.user.student.course.name
-            oncampus_data = Placed.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll =F('student__student'),branch = F('student__student__branch__branch_name'),ctc_ = F('job_role__ctc'))
-            offcampus_data = Offcampus.objects.filter(session = session,type = 'placement',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),ctc_=F('ctc'))
-            ppo_data = PPO.objects.filter(session = session,student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branch_name'),ctc_=F('ctc'))
-           
+            oncampus_data = Placed.objects.filter(job_role__drive__session = session,student__student__course__name = course_name).values(roll =F('student__student'),branch = F('student__student__branch__branchName'),ctc_ = F('job_role__ctc'))
+            offcampus_data = Offcampus.objects.filter(session = session,type = 'placement',student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branchName'),ctc_=F('ctc'))
+            ppo_data = PPO.objects.filter(session = session,student__course__name = course_name).values(roll=F('student'),branch = F('student__branch__branchName'),ctc_=F('ctc'))
+
             complete_data = oncampus_data.union(offcampus_data,ppo_data) 
             offers = complete_data.count()
             print(offers)
             
-            branches = Specialization.objects.filter(course__name = course_name).values_list('branch_name',flat=True)
+            branches = Specialization.objects.filter(course__name = course_name).values_list('branchName',flat=True)
             complete_data = pd.DataFrame(complete_data)
             temp = 0
             course_wise = []
@@ -445,7 +448,7 @@ class BasicStats(APIView):
                 avg_ctc = round(branch_data.get('ctc_')["max"].sum()/total_student,2)
                 temp += total_offers
 
-                   
+
                 branch_wise = {"course":course_name,"branch":branch,"offers":total_offers,"avg_ctc":avg_ctc,"max_ctc":max_ctc,"min_ctc":min_ctc}
                 course_wise.append(branch_wise)
             # print(temp)
@@ -482,7 +485,6 @@ class BasicStats(APIView):
 class CommonQueries(APIView):
     pagination_class = CustomPagination
     # permission_classes = [permissions.IsAuthenticated]
-
 
     def get(self,request):
         if request.query_params.get('session') == None or request.query_params["session"] == "":
@@ -532,7 +534,6 @@ class CommonQueries(APIView):
             paginator = self.pagination_class()
             queryset = paginator.paginate_queryset(queryset,request)
             return paginator.get_paginated_response(queryset) 
-        
 
 
 ###################### Statistics Inner Page
@@ -572,7 +573,6 @@ class CompanyRelatedQueries(APIView):
         courses_list = Course.objects.values_list('name', flat=True)
         print(courses_list)
 
-
         queryset = None
         if jtype == "intern":
             Main_Model = Interned
@@ -581,11 +581,11 @@ class CompanyRelatedQueries(APIView):
             Main_Model = Placed
 
         queryset_1 = Main_Model.objects.filter(job_role__drive__session = session,job_role__drive__company__name__iexact = company)
-        queryset_1 = queryset_1.values(course = F('student__student__course__name'), branch = F('student__student__branch__branch_name'), role = F('job_role__role__name'), curr_ctc = F('job_role__ctc')).annotate(offers=Count('student'))
+        queryset_1 = queryset_1.values(course = F('student__student__course__name'), branch = F('student__student__branch__branchName'), role = F('job_role__role__name'), curr_ctc = F('job_role__ctc')).annotate(offers=Count('student'))
         # print(queryset_1)
 
         queryset_2 = Offcampus.objects.filter(session = session, company__name = company, type = jtype)
-        queryset_2 = queryset_2.values(course = F('student__course__name'), branch = F('student__branch__branch_name'), role = F('profile__name'), curr_ctc = F('ctc')).annotate(offers=Count('student'))
+        queryset_2 = queryset_2.values(course = F('student__course__name'), branch = F('student__branch__branchName'), role = F('profile__name'), curr_ctc = F('ctc')).annotate(offers=Count('student'))
         # print(queryset_2)
 
         queryset = list(queryset_1.union(queryset_2, all=True))
@@ -605,7 +605,6 @@ class CompanyRelatedQueries(APIView):
             curr_course_result['courseName'] = course
             curr_course_result['totalCourseOffers']=0
 
-
             curr_course_result['roles'] = []
             # roles_list = queryset_1.values_list('role','curr_ctc','job_role__role__name').distinct()
             roles_list = list(set([(x['role'],x['curr_ctc']) for x in queryset]))
@@ -621,13 +620,12 @@ class CompanyRelatedQueries(APIView):
             print(curr_course_result['roles'])
             # return Response(status=status.HTTP_202_ACCEPTED)
 
-
             curr_course_result['branches'] = []
-            branches_list = Specialization.objects.filter(course__name = course).values_list('branch_name',flat=True)
+            branches_list = Specialization.objects.filter(course__name = course).values_list('branchName',flat=True)
             # print(branches_list)
 
             for j,branch in enumerate(branches_list):
-                # branch_queryset = course_queryset.filter(student__student__branch__branch_name = branch)
+                # branch_queryset = course_queryset.filter(student__student__branch__branchName = branch)
                 # print(course,":",branch)
                 # print(branch_queryset)
                 # return Response(status=status.HTTP_202_ACCEPTED)
@@ -664,15 +662,10 @@ class CompanyRelatedQueries(APIView):
             result['courses'].append(curr_course_result)
 
             result['totalOffers'] += curr_course_result['totalCourseOffers']
-   
         return Response(result)
 
-      
 
-    
-
-
- ########################## Dashboard API 
+########################## Dashboard API 
 class RecentNotifications(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -683,7 +676,7 @@ class RecentNotifications(APIView):
         print(recentDrive)
         serializerdrive = []
         for drive in recentDrive:
-           serializerdrive.append({'Id' : drive.id,'Company':drive.company.name,'Starting_Date':drive.starting_date,'Image_Url':"https://picsum.photos/100"})
+            serializerdrive.append({'Id' : drive.id,'Company':drive.company.name,'Starting_Date':drive.starting_date,'Image_Url':"https://picsum.photos/100"})
         result["Recent_Drive"] = serializerdrive
 
         serializerexperience = []
