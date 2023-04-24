@@ -129,7 +129,7 @@ class DriveList(generics.ListCreateAPIView):
             drive = driveserializer.save()
             job_roles = request.data["job_roles"]
             for job_role in job_roles:
-                new_role = JobRolesSerializer(data={"drive":drive.pk,"role":job_role["role"],"ctc":job_role["ctc"], "cgpi":float(job_role["cgpi"]),"eligible_batches":job_role['eligible_batches']})
+                new_role = JobRolesSerializer(data={"drive":drive.pk,"role":job_role["role"],"ctc":job_role["ctc"], "cgpi":float(job_role["cgpi"]),"eligible_batches":job_role['eligibleBatches']})
                 if(new_role.is_valid()):
                     new_role.save()
                 else:

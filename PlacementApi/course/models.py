@@ -19,15 +19,15 @@ class Course(models.Model):
         return self.name 
 
 class Specialization(models.Model):
-    branch_name = models.CharField(max_length=200)
-    branch_fullname = models.CharField(max_length=200,null=True)
+    branchName = models.CharField(max_length=200)
+    branchFullname = models.CharField(max_length=200,null=True)
     course = models.ForeignKey(Course,on_delete=models.CASCADE)
-    oncampus = models.IntegerField(default=75)
-    offcampuspppo = models.IntegerField(default = 80)
-    is_active = models.BooleanField(default=True)
+    onCampus = models.IntegerField(default=75)
+    offCampusPpo = models.IntegerField(default = 80)
+    isActive = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.branch_name 
+        return self.branchName
 
 
 # We need to fill manually

@@ -37,30 +37,30 @@ class HR_details(models.Model):
 # custom model manager for excluding banned student
 class JNFManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(is_approved = True) 
+        return super().get_queryset().filter(isApproved = True) 
 
 class JNF(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="jnf")
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="company")
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
-    is_placement = models.BooleanField()
-    is_intern = models.BooleanField()
-    is_six_months_intern = models.BooleanField(default=False) 
-    mode_of_hiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site'),('hybrid','Hybrid')], max_length=20)
-    pre_placement_talk = models.BooleanField(default=True)
-    aptitude_test = models.BooleanField(default=True)
-    technical_test = models.BooleanField(default=True)
-    group_discussion = models.BooleanField(default=True)
-    personal_interview = models.BooleanField(default=True)
-    no_of_persons_visiting = models.IntegerField(default=0) # 0 if drive is virtual
-    job_location = models.CharField(max_length=100) # Separate different job locations with any delimeter
-    tentative_drive_date = models.DateField()
+    isPlacement = models.BooleanField()
+    isIntern = models.BooleanField()
+    isSixMonthsIntern = models.BooleanField(default=False) 
+    modeOfHiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site'),('hybrid','Hybrid')], max_length=20)
+    prePlacementTalk = models.BooleanField(default=True)
+    aptitudeTest = models.BooleanField(default=True)
+    technicalTest = models.BooleanField(default=True)
+    groupDiscussion = models.BooleanField(default=True)
+    personalInterview = models.BooleanField(default=True)
+    noOfPersonsVisiting = models.IntegerField(default=0) # 0 if drive is virtual
+    jobLocation = models.CharField(max_length=100) # Separate different job locations with any delimeter
+    tentativeDriveDate = models.DateField()
     # hr = models.ManyToManyField(HR_details, blank=True)
-    is_approved = models.BooleanField(default=False)
+    isApproved = models.BooleanField(default=False)
 
     objects = models.Manager()
     approved = JNFManager()
     def __str__(self):
-        return self.company.name + " " + self.mode_of_hiring
+        return self.company.name + " " + self.modeOfHiring
 
     class Meta:
         unique_together = ("company", "session")
@@ -68,42 +68,44 @@ class JNF(models.Model):
 
 class JNF_placement_base(models.Model):
     def job_desc_directory_path(instance, filename):
-        return 'jnf/job_desc/placement/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    tentative_start = models.DateField()
-    job_profile = models.CharField(max_length=100)
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
+        return 'jnf/job_desc/placement/{0}.pdf'.format(instance.jnf.company.name + instance.jobProfile)
+    tentativeJoiningDate = models.DateField()
+    jobProfile = models.CharField(max_length=100)
+    jobDescPdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])
-    eligible_batches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
+    eligibleBatches = models.ManyToManyField(Specialization) # add only specialisations which are eligible
     class Meta:
         abstract = True
-        unique_together = ['jnf','job_profile']
+        unique_together = ['jnf','jobProfile']
 
 class JNF_placement(JNF_placement_base):
-    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_placement")
-    has_intern = models.BooleanField(default=False)
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnfPlacement")
+    hasIntern = models.BooleanField(default=False)
     ctc = models.FloatField() #in LPA
+
+
 class JNF_intern_fte(JNF_placement_base):
-    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_intern_fte")
-    ctc_after_intern = models.FloatField() #in LPA
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnfInternFte")
+    ctcAfterIntern = models.FloatField() #in LPA
     stipend = models.FloatField() #in thousands
     duration = models.PositiveIntegerField(default=6)
 
 
 class JNF_intern(models.Model):
     def job_desc_directory_path(instance, filename):
-        return 'jnf/job_desc/intern/{0}.pdf'.format(instance.jnf.company.name + instance.job_profile)
-    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnf_intern")
-    has_ppo = models.BooleanField()
+        return 'jnf/job_desc/intern/{0}.pdf'.format(instance.jnf.company.name + instance.jobProfile)
+    jnf = models.ForeignKey(JNF, on_delete=models.CASCADE, related_name="jnfIntern")
+    hasPpo = models.BooleanField()
     duration = models.IntegerField(choices=[(1,"One Month"), (2, "Two Months")]) #in months
-    tentative_start = models.DateField()
-    job_profile = models.CharField(max_length=100)
+    tentativeJoiningDate = models.DateField()
+    jobProfile = models.CharField(max_length=100)
     stipend = models.FloatField() # stipend to be given per month in thousands
-    ctc_after_ppo = models.FloatField()  # expected ctc to be given if 
-    job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
+    ctcAfterPpo = models.FloatField()  # expected ctc to be given if 
+    jobDescPdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
     cgpi = models.FloatField(validators=[MaxValueValidator(10)])  # default cgpi puchni h
-    eligible_batches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
+    eligibleBatches = models.ManyToManyField(Specialization, blank=True) # add only specialisations which are eligible
 
     class Meta:
-        unique_together = ['jnf','job_profile']
+        unique_together = ['jnf','jobProfile']
     def __str__(self) -> str:
-        return self.jnf.company.name + " " + self.job_profile
+        return self.jnf.company.name + " " + self.jobProfile

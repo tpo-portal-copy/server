@@ -59,14 +59,14 @@ class StudentSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source = 'course.name',read_only = True)
     course = serializers.PrimaryKeyRelatedField(queryset = Course.objects.all(),write_only = True)
     branch = serializers.StringRelatedField()
-    branch_fullname = serializers.CharField(source = 'branch.branch_fullname',read_only = True)
+    branchFullname = serializers.CharField(source = 'branch.branchFullname',read_only = True)
     branch_write = serializers.PrimaryKeyRelatedField(queryset=Specialization.objects.all(),write_only = True)
     city = serializers.StringRelatedField()
     city_write = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(),write_only = True)
     isBanned = serializers.SerializerMethodField(read_only = True)
     # state = serializers.SlugRelatedField(slug_field='name',read_only = True)
-    state = serializers.SerializerMethodField()
-    college_email = serializers.SerializerMethodField()
+    state = serializers.CharField(source='city.state.name',read_only=True)
+    college_email = serializers.CharField(source='roll.email',read_only=True)
     eligibility = serializers.SerializerMethodField()
     class_12_domicile = serializers.SlugRelatedField(queryset = State.objects.all(),slug_field='name')
     
@@ -75,17 +75,16 @@ class StudentSerializer(serializers.ModelSerializer):
         try:
             course_year = CourseYearAllowed.objects.get(course=item.course,year=item.current_year)
         except CourseYearAllowed.MultipleObjectsReturned:
-            new_val = CourseYearAllowed.objects.filter(course=item.course,year=item.current_year)
             raise APIException("Details of multiple CourseYears present with same type")
- 
+        except CourseYearAllowed.DoesNotExist:
+            raise APIException("CourseYear does not exist in CourseYearAllowed Table")
+
         result["allowed_for"] = course_year.type_allowed
         if result["allowed_for"] == "placement" or result["allowed_for"] == "both":
             try:
-               ns = StudentNotSitting.objects.get(student = item)
+                ns = StudentNotSitting.objects.get(student = item)
             except StudentNotSitting.DoesNotExist:
-                result["sitting"] = True   
-                # print(item.roll.username)
-                # result["resume"] = StudentPlacement.objects.get(student=item).resume     check for pass outs  
+                result["sitting"] = True
                 return result
             result["sitting"] = False
             result["reason"] = StudentNotSittingSerializer(ns).data["reason"]
@@ -95,20 +94,13 @@ class StudentSerializer(serializers.ModelSerializer):
             result["resume"] = data["resume"]
 
         return result
-   
-    def get_college_email(self,item):
-        return item.roll.email
 
-    def get_state(self,item):
-        return item.city.state.name
-   
     def get_isBanned(self,item):
-       return (item.banned_date < timezone.now() and item.over_date > timezone.now())
-    
+        return (item.banned_date < timezone.now() and item.over_date > timezone.now())
+
     class Meta:
         model = Student
         fields = '__all__'
-    
 
     def create(self, validated_data):
         print(validated_data)
@@ -142,8 +134,75 @@ class StudentSerializer(serializers.ModelSerializer):
         instance.linkedin = validated_data.get('linkedin',instance.linkedin)
         instance.save()
         return instance
-    
-    
+
+
+class StudentTPOSerializer(StudentSerializer):
+    isNotSitting = serializers.SerializerMethodField(read_only = True)
+    isPlaced = serializers.SerializerMethodField(read_only = True)
+    countPlacement = serializers.SerializerMethodField(read_only = True)
+    placedClusters = serializers.SerializerMethodField(read_only = True)
+
+    def get_isNotSitting(self, item):
+        try:
+            item.student_ns
+        except:
+            return False
+        return True
+
+    def get_countPlacement(self, item):
+        student_placement = None
+        try:
+            student_placement = item.student_placement
+        except:
+            return 0
+
+        placed = None
+        try:
+            placed = Placed.objects.get(student = student_placement)
+        except Placed.DoesNotExist:
+            return 0
+        except Placed.MultipleObjectsReturned:
+            return len(placed)
+        return 1
+
+    def get_isPlaced(self,item):
+        return (self.get_countPlacement(item)>0)
+
+    def get_placedClusters(self, item):
+        student_placement = None
+        try:
+            student_placement = item.student_placement
+        except:
+            return []
+
+        chosenclusters = None
+        try:
+            chosenclusters = student_placement.cluster
+        except:
+            return "Clusters were not chosen by you!! Please select your clusters and then come back"
+
+        placed = Placed.objects.filter(student = student_placement)
+        clusters_list = []
+        for placement in placed:
+            obj = {}
+            cluster = Cluster.objects.get(starting__lt = placement.job_role.ctc,ending__gte = placement.job_role.ctc)
+
+            obj['cluster'] = cluster.cluster_id
+            if cluster.cluster_id < chosenclusters.cluster_1.cluster_id:
+                obj['type'] = "below"
+            elif cluster.cluster_id == chosenclusters.cluster_1.cluster_id:
+                obj['type'] = "base"
+            elif cluster.cluster_id > chosenclusters.cluster_1.cluster_id and cluster.cluster_id < chosenclusters.cluster_2.cluster_id:
+                obj['type'] = "above_base"
+            elif cluster.cluster_id == chosenclusters.cluster_2.cluster_id:
+                obj['type'] = "middle"
+            elif cluster.cluster_id > chosenclusters.cluster_2.cluster_id and cluster.cluster_id < chosenclusters.cluster_3.cluster_id:
+                obj['type'] = "above_middle"
+            elif cluster.cluster_id == chosenclusters.cluster_3.cluster_id:
+                obj['type'] = "dream"
+            clusters_list.append(obj)
+        # print(clusters_list)
+        return clusters_list
 
 
 class StudentPlacementSerializer(serializers.ModelSerializer):
@@ -220,7 +279,7 @@ class StudentNotSittingSerializer(serializers.ModelSerializer):
 class Check(serializers.RelatedField):
     def to_representation(self, value):
         print(value)
-        return value.student.course.name + value.student.branch.branch_name+str(value.student.passing_year)
+        return value.student.course.name + value.student.branch.branchName+str(value.student.passing_year)
 class Check_rol(serializers.RelatedField):
     def to_representation(self, value):
         return value.drive.session
@@ -240,15 +299,3 @@ class InternedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interned
         fields = '__all__'
-
-
-
-
-
-        
-
-
-
-        
-        
-      

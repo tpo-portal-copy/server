@@ -21,14 +21,14 @@ class Drive(models.Model):
         return 'drive/job_desc/{0}/{1}/{2}.pdf'.format(instance.session,instance.job_type,instance.company.name)
     company = models.ForeignKey(Company,on_delete=models.CASCADE)
     job_desc_pdf = models.FileField(upload_to=job_desc_directory_path, null=True, blank=True, validators=[FileExtensionValidator(['docx','doc','pdf']), Validate_file_size(5,"MB")])
-    mode_of_hiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site')], max_length=20)
-    pre_placement_talk = models.BooleanField(default=True)
-    aptitude_test = models.BooleanField(default=True)
-    technical_test = models.BooleanField(default=True)
-    group_discussion = models.BooleanField(default=True)
-    personal_interview = models.BooleanField(default=True)
-    no_of_persons_visiting = models.IntegerField(default=0) # 0 if drive is virtual
-    job_location = models.CharField(max_length=100) # Separate different job locations with any delimeter
+    modeOfHiring = models.CharField(default="virtual", choices = [('virtual','Virtual'),('onsite','On-Site')], max_length=20)
+    prePlacementTalk = models.BooleanField(default=True)
+    aptitudeTest = models.BooleanField(default=True)
+    technicalTest = models.BooleanField(default=True)
+    groupDiscussion = models.BooleanField(default=True)
+    personalInterview = models.BooleanField(default=True)
+    noOfPersonsVisiting = models.IntegerField(default=0) # 0 if drive is virtual
+    jobLocation = models.CharField(max_length=100) # Separate different job locations with any delimeter
     starting_date = models.DateField()
     # closed_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
