@@ -79,7 +79,7 @@ class DriveList(generics.ListCreateAPIView):
             session = str(curr_date.year) + "-"+str(curr_date.year+1)[2:]
 
         if self.request.user.username == "tpo@nith.ac.in":
-            queryset = Drive.objects.filter(session = session)
+            queryset = Drive.objects.filter()
             return queryset
         type = CourseYearAllowed.objects.get(course = self.request.user.student.course,year = self.request.user.student.current_year).type_allowed
         if type == "placement": 

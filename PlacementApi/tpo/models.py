@@ -24,6 +24,8 @@ class Announcement(models.Model):
     title = models.CharField(max_length=500)
     # type = models.CharField(max_length=100)
     description = models.TextField()
+    # company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
+    # company = models.CharField(max_length=100, blank=True, null=True)
     session = models.CharField(max_length=7,validators=[RegexValidator(regex=r'\d{4}[-]\d{2}$')])
     # time = models.DateTimeField(auto_now=True)
     tpo = models.ForeignKey(TPO, on_delete=models.CASCADE, blank=True, null=True)
